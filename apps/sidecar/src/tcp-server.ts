@@ -5,7 +5,7 @@ import { config } from './config.js';
 import { logger } from './logger.js';
 import { postJob } from './laravel-client.js';
 import { parseEscPos } from './parser.js';
-import type { ConnectionStatus, JobPayload } from './types.js';
+import { DEFAULT_FAULT_CONFIG, type ConnectionStatus, type FaultConfig, type JobPayload } from './types.js';
 
 export interface TcpServerHandle {
   server: net.Server;
@@ -13,8 +13,13 @@ export interface TcpServerHandle {
   getStatus: () => { host: string; port: number; listening: boolean };
 }
 
-export function createTcpServer(): TcpServerHandle {
+export function createTcpServer(getFaultConfig?: () => FaultConfig): TcpServerHandle {
   const server = net.createServer((socket) => {
+    const faults = getFaultConfig?.() ?? DEFAULT_FAULT_CONFIG;
+    if (faults.offline) {
+      socket.destroy();
+      return;
+    }
     const correlationId = ulid();
     const externalId = `job_${correlationId}`;
     const receivedAt = new Date().toISOString();
@@ -43,6 +48,9 @@ export function createTcpServer(): TcpServerHandle {
       if (status === 'idle_timeout') parsed.warnings = [...new Set([...parsed.warnings, 'idle_timeout_finalize'])];
       if (status === 'max_size_exceeded') parsed.warnings = [...new Set([...parsed.warnings, 'max_size_exceeded'])];
       if (status === 'socket_error') parsed.warnings = [...new Set([...parsed.warnings, 'socket_error'])];
+      if (faults.paper_out) parsed.warnings = [...new Set([...parsed.warnings, 'paper_out'])];
+      if (faults.cover_open) parsed.warnings = [...new Set([...parsed.warnings, 'cover_open'])];
+      if (faults.cutter_error) parsed.warnings = [...new Set([...parsed.warnings, 'cutter_error'])];
 
       const payload: JobPayload = {
         schema_version: '1.0',

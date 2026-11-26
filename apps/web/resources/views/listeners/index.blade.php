@@ -1,0 +1,90 @@
+@component('layouts.app', ['title' => 'Listeners - Open POS Printer Emulator'])
+<style>
+    .fault-form { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+    .fault-form label { display:inline-flex; gap:6px; align-items:center; margin:0; color:var(--text); font-size:13px; }
+    .fault-form input[type="checkbox"] { width:auto; }
+    .status-pill { display:inline-block; padding:4px 10px; border-radius:999px; font-size:12px; border:1px solid var(--border); }
+    .status-listening { color:#57d38c; border-color:#28543a; background:#102218; }
+    .status-stopped { color:#8fa3b8; border-color:#31465f; background:#111923; }
+    .status-error { color:#ff7b72; border-color:#5a2522; background:#211010; }
+</style>
+
+<div style="display:flex; justify-content:space-between; align-items:flex-end; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
+    <div>
+        <a href="{{ route('jobs.index') }}" class="muted">&larr; Job history</a>
+        <h1 style="margin:6px 0 0;">Listeners</h1>
+        <p class="muted" style="margin:6px 0 0;">Manage TCP listener status and fault simulation. Default listener: <code>lst_default_9100</code>.</p>
+    </div>
+</div>
+
+@if (session('status'))
+    <div class="panel" style="margin-bottom:16px; border-color:#28543a; color:#57d38c;">{{ session('status') }}</div>
+@endif
+@if ($errors->any())
+    <div class="panel" style="margin-bottom:16px; border-color:#5a2522; color:#ff7b72;">
+        {{ $errors->first() }}
+    </div>
+@endif
+
+<div class="panel">
+    <table>
+        <thead>
+        <tr>
+            <th>Listener</th>
+            <th>Bind</th>
+            <th>Profile</th>
+            <th>DB Status</th>
+            <th>Sidecar</th>
+            <th>Jobs</th>
+            <th>Fault Simulation</th>
+        </tr>
+        </thead>
+        <tbody>
+        @forelse ($listeners as $listener)
+            @php
+                $sidecar = $sidecarById[$listener->external_id] ?? null;
+                $scStatus = $sidecar['status'] ?? 'unknown';
+                $scClass = match($scStatus) {
+                    'listening' => 'status-listening',
+                    'stopped' => 'status-stopped',
+                    'error' => 'status-error',
+                    default => 'status-stopped',
+                };
+                $faults = $sidecar['fault_config'] ?? ($listener->fault_config_json ?? []);
+            @endphp
+            <tr>
+                <td>
+                    <div style="font-weight:600;">{{ $listener->name }}</div>
+                    <div class="muted">{{ $listener->external_id }}</div>
+                </td>
+                <td>{{ $listener->host }}:{{ $listener->port }}</td>
+                <td>{{ $listener->printerProfile?->name ?? '-' }}</td>
+                <td><span class="badge">{{ $listener->status }}</span></td>
+                <td>
+                    <span class="status-pill {{ $scClass }}">{{ $scStatus }}</span>
+                    @if (!empty($sidecar['last_error']))
+                        <div class="muted" style="margin-top:4px; color:#ff7b72;">{{ $sidecar['last_error'] }}</div>
+                    @endif
+                </td>
+                <td>{{ $listener->print_jobs_count }}</td>
+                <td>
+                    <form method="POST" action="{{ route('listeners.faults.update', $listener) }}" class="fault-form">
+                        @csrf
+                        @method('PATCH')
+                        <label><input type="checkbox" name="paper_out" value="1" @checked(!empty($faults['paper_out']))> Paper out</label>
+                        <label><input type="checkbox" name="cover_open" value="1" @checked(!empty($faults['cover_open']))> Cover open</label>
+                        <label><input type="checkbox" name="cutter_error" value="1" @checked(!empty($faults['cutter_error']))> Cutter error</label>
+                        <label><input type="checkbox" name="offline" value="1" @checked(!empty($faults['offline']))> Offline</label>
+                        <button class="btn btn-secondary" type="submit">Apply</button>
+                    </form>
+                </td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="7" class="muted">No listeners configured.</td>
+            </tr>
+        @endforelse
+        </tbody>
+    </table>
+</div>
+@endcomponent

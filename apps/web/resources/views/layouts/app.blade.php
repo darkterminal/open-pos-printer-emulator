@@ -38,9 +38,11 @@
             <div class="brand">Open POS Printer Emulator</div>
             <div class="muted">Sprint 1 foundation — TCP ingest to job history</div>
         </div>
-        <div>
+        <div style="display:flex; gap:10px; align-items:center;">
             @auth
-                <form method="POST" action="{{ route('logout') }}">
+                <a href="{{ route('jobs.index') }}" class="muted">Jobs</a>
+                <a href="{{ route('listeners.index') }}" class="muted">Listeners</a>
+                <form method="POST" action="{{ route('logout') }}" style="margin:0;">
                     @csrf
                     <button class="btn btn-secondary" type="submit">Logout</button>
                 </form>

@@ -1,6 +1,20 @@
 export type ConnectionStatus = 'closed_by_client' | 'idle_timeout' | 'socket_error' | 'max_size_exceeded';
 export type ParseStatus = 'ok' | 'partial' | 'parse_error';
 
+export interface FaultConfig {
+  paper_out: boolean;
+  cover_open: boolean;
+  cutter_error: boolean;
+  offline: boolean;
+}
+
+export const DEFAULT_FAULT_CONFIG: FaultConfig = {
+  paper_out: false,
+  cover_open: false,
+  cutter_error: false,
+  offline: false,
+};
+
 export interface JobPayload {
   schema_version: '1.0';
   correlation_id: string;
