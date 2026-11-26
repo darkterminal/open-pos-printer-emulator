@@ -39,6 +39,7 @@ class JobIngested implements ShouldBroadcastNow
             'id' => $job->id,
             'external_id' => $job->external_id,
             'status' => $job->status,
+            'listener_id' => $job->listener_id,
             'listener' => $job->listener?->only(['name', 'external_id']),
             'source_ip' => $job->source_ip,
             'source_port' => $job->source_port,
