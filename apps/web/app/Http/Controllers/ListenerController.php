@@ -18,6 +18,7 @@ class ListenerController extends Controller
     public function index(Request $request, SidecarClient $sidecar): View|Response
     {
         $listeners = Listener::query()
+            ->where('user_id', $request->user()->id)
             ->with('printerProfile:id,name')
             ->withCount('printJobs')
             ->latest('id')
@@ -114,8 +115,9 @@ class ListenerController extends Controller
         return back()->with('status', "Listener {$listener->name} created.");
     }
 
-    public function destroy(Listener $listener, SidecarClient $sidecar): RedirectResponse
+    public function destroy(Request $request, Listener $listener, SidecarClient $sidecar): RedirectResponse
     {
+        abort_unless($listener->user_id === $request->user()->id, 403);
         try {
             $sidecar->stopListener($listener->external_id);
         } catch (\Throwable $e) {
@@ -131,6 +133,7 @@ class ListenerController extends Controller
 
     public function update(Request $request, Listener $listener, SidecarClient $sidecar): RedirectResponse
     {
+        abort_unless($listener->user_id === $request->user()->id, 403);
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'host' => ['required', 'string', 'max:255'],
@@ -187,9 +190,9 @@ class ListenerController extends Controller
         return back()->with('status', "Listener {$listener->name} updated.");
     }
 
-    public function sync(SidecarClient $sidecar): RedirectResponse
+    public function sync(Request $request, SidecarClient $sidecar): RedirectResponse
     {
-        $listeners = Listener::query()->get();
+        $listeners = Listener::query()->where('user_id', $request->user()->id)->get();
         $ok = 0;
 
         foreach ($listeners as $listener) {
@@ -213,6 +216,7 @@ class ListenerController extends Controller
 
     public function updateFaults(Request $request, Listener $listener, SidecarClient $sidecar): RedirectResponse
     {
+        abort_unless($listener->user_id === $request->user()->id, 403);
         $validated = $request->validate([
             'paper_out' => ['nullable', 'boolean'],
             'cover_open' => ['nullable', 'boolean'],

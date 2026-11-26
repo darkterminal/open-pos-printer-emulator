@@ -71,7 +71,7 @@ class PrinterProfileTest extends TestCase
     {
         $user = User::factory()->create();
         $profile = PrinterProfile::query()->create([
-            'name' => 'InUse', 'is_builtin' => false, 'printer_model' => 'b', 'paper_width_mm' => 80,
+            'user_id' => $user->id, 'name' => 'InUse', 'is_builtin' => false, 'printer_model' => 'b', 'paper_width_mm' => 80,
             'dpi' => 203, 'chars_per_line' => 48, 'code_page' => 'CP437', 'image_max_width_dots' => 576, 'image_max_bytes' => 1048576,
         ]);
         Listener::query()->create([

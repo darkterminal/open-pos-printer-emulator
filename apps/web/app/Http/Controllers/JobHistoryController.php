@@ -28,12 +28,13 @@ class JobHistoryController extends Controller
         $perPage = (int) ($validated['per_page'] ?? 25);
         $query = PrintJob::query()
             ->with('listener:id,name,external_id')
+            ->whereHas('listener', fn (Builder $q) => $q->where('user_id', $request->user()->id))
             ->latest('id');
 
-        $this->applyFilters($query, $validated);
+        $this->applyFilters($query, $validated, $request->user()->id);
 
         $jobs = $query->paginate($perPage)->withQueryString();
-        $listeners = Listener::query()->orderBy('name')->get(['id', 'name', 'external_id']);
+        $listeners = Listener::query()->where('user_id', $request->user()->id)->orderBy('name')->get(['id', 'name', 'external_id']);
         $filters = [
             'q' => (string) ($validated['q'] ?? ''),
             'status' => (string) ($validated['status'] ?? ''),
@@ -68,6 +69,7 @@ class JobHistoryController extends Controller
 
     public function show(Request $request, PrintJob $job): View|InertiaResponse
     {
+        abort_unless($job->listener && $job->listener->user_id === $request->user()->id, 403);
         $job->load(['listener:id,name,external_id', 'rawPayload']);
 
         if (strtolower((string) $request->query('ui', '')) === 'blade') {
@@ -114,11 +116,12 @@ class JobHistoryController extends Controller
 
         $query = PrintJob::query()
             ->with('listener:id,name,external_id')
+            ->whereHas('listener', fn (Builder $q) => $q->where('user_id', $request->user()->id))
             ->when($afterId > 0, fn ($q) => $q->where('id', '>', $afterId))
             ->latest('id')
             ->limit(100);
 
-        $this->applyFilters($query, $validated);
+        $this->applyFilters($query, $validated, $request->user()->id);
 
         $jobs = $query->get()
             ->map(fn (PrintJob $job) => $this->jobSummary($job))
@@ -130,7 +133,7 @@ class JobHistoryController extends Controller
     /**
      * @param  array<string, mixed>  $filters
      */
-    private function applyFilters(Builder $query, array $filters): void
+    private function applyFilters(Builder $query, array $filters, ?int $userId = null): void
     {
         $q = trim((string) ($filters['q'] ?? ''));
         $status = trim((string) ($filters['status'] ?? ''));
@@ -149,7 +152,16 @@ class JobHistoryController extends Controller
             $query->where('status', $status);
         }
         if ($listenerId !== null && $listenerId !== '') {
-            $query->where('listener_id', (int) $listenerId);
+            $lid = (int) $listenerId;
+            if ($userId !== null) {
+                $owned = Listener::query()->where('id', $lid)->where('user_id', $userId)->exists();
+                if (! $owned) {
+                    $query->whereRaw('1 = 0');
+
+                    return;
+                }
+            }
+            $query->where('listener_id', $lid);
         }
         if ($dateFrom !== '') {
             $query->whereDate('received_at', '>=', $dateFrom);

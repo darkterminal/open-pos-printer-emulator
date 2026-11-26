@@ -15,7 +15,10 @@ class PrinterProfileController extends Controller
     public function index(Request $request): View|Response
     {
         $profiles = PrinterProfile::query()
-            ->withCount('listeners')
+            ->where(function ($q) use ($request) {
+                $q->where('is_builtin', true)->orWhere('user_id', $request->user()->id);
+            })
+            ->withCount(['listeners' => fn ($q) => $q->where('user_id', $request->user()->id)])
             ->orderByDesc('is_builtin')
             ->orderBy('name')
             ->get();
@@ -56,6 +59,7 @@ class PrinterProfileController extends Controller
         if ($printerProfile->is_builtin) {
             return back()->withErrors(['profile' => 'Built-in profiles cannot be edited.']);
         }
+        abort_unless($printerProfile->user_id === $request->user()->id, 403);
 
         $validated = $this->validated($request, $printerProfile);
         $printerProfile->update($validated);
@@ -63,11 +67,12 @@ class PrinterProfileController extends Controller
         return back()->with('status', 'Printer profile updated.');
     }
 
-    public function destroy(PrinterProfile $printerProfile): RedirectResponse
+    public function destroy(Request $request, PrinterProfile $printerProfile): RedirectResponse
     {
         if ($printerProfile->is_builtin) {
             return back()->withErrors(['profile' => 'Built-in profiles cannot be deleted.']);
         }
+        abort_unless($printerProfile->user_id === $request->user()->id, 403);
         if ($printerProfile->listeners()->exists()) {
             return back()->withErrors(['profile' => 'Profile is used by listeners. Reassign listeners before deleting.']);
         }
