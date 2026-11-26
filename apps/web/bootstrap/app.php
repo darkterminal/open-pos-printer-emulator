@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -13,7 +14,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Machine-to-machine ingest must keep payload bytes faithful: no trimming
+        // of receipt whitespace and no empty-string -> null coercion.
+        $internalApi = static fn (Request $request): bool => $request->is('api/internal/*');
+
+        $middleware->convertEmptyStringsToNull([$internalApi]);
+        $middleware->trimStrings([$internalApi]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

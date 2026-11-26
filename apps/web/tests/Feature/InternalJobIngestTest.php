@@ -66,7 +66,28 @@ class InternalJobIngestTest extends TestCase
                 'commands' => [
                     ['offset' => 0, 'hex' => '1b 40', 'name' => 'ESC_@'],
                 ],
-                'render_model' => ['width_dots' => 576, 'lines' => [], 'actions' => []],
+                'render_model' => [
+                    'width_dots' => 576,
+                    'lines' => [
+                        [
+                            'text' => '',
+                            'align' => 'left',
+                            'bold' => false,
+                            'underline' => false,
+                            'width' => 1,
+                            'height' => 1,
+                        ],
+                        [
+                            'text' => 'Coffee        15000',
+                            'align' => 'left',
+                            'bold' => false,
+                            'underline' => false,
+                            'width' => 1,
+                            'height' => 1,
+                        ],
+                    ],
+                    'actions' => [],
+                ],
             ],
         ];
     }
@@ -117,6 +138,8 @@ class InternalJobIngestTest extends TestCase
         $this->assertSame('partial', $job->status);
         $this->assertSame(1, $job->warnings_count);
         $this->assertSame('ESC_@', $job->commands_json[0]['name']);
+        $this->assertSame('', $job->render_model_json['lines'][0]['text']);
+        $this->assertSame('Coffee        15000', $job->render_model_json['lines'][1]['text']);
     }
 
     public function test_rejects_unknown_listener(): void

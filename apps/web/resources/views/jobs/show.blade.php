@@ -11,6 +11,8 @@
     .receipt .line { min-height: 1.45em; white-space: pre-wrap; word-break: break-word; }
     .receipt .line.empty { min-height: 1.45em; }
     .receipt .cut { border-top: 2px dashed #9a9a9a; margin-top: 14px; padding-top: 6px; text-align:center; font-size:10px; letter-spacing:.3em; color:#7a7a7a; }
+    .receipt .placeholder { border:1px dashed #8d8a80; border-radius:3px; padding:8px 6px; font-size:11px; color:#4a4a4a; background:repeating-linear-gradient(45deg,#efece3,#efece3 6px,#e7e3d8 6px,#e7e3d8 12px); word-break:break-word; }
+    .receipt .placeholder .kind { display:block; font-weight:700; letter-spacing:.2em; font-size:9px; color:#3d3d3d; margin-bottom:2px; }
     .receipt .head { text-align:center; font-weight:700; letter-spacing:.18em; font-size:11px; color:#555; margin-bottom:10px; }
     .cmd-table td { font-family: ui-monospace, monospace; font-size:12px; }
     .cmd-hex { color:#8fa3b8; white-space:nowrap; }
@@ -55,6 +57,7 @@
                     @php
                         $text = (string) ($line['text'] ?? '');
                         $align = $line['align'] ?? 'left';
+                        $kind = $line['kind'] ?? 'text';
                         $segments = $line['segments'] ?? [];
                         $style = 'text-align:' . $align . ';';
                         if (!empty($line['bold'])) $style .= 'font-weight:700;';
@@ -64,7 +67,12 @@
                         if ($width > 1) $style .= 'font-size:' . (13 * $width) . 'px;';
                         if ($height > 1) $style .= 'line-height:' . (1.45 * $height) . ';';
                     @endphp
-                    @if (!empty($segments))
+                    @if ($kind !== 'text')
+                        <div class="placeholder" style="text-align: {{ $align }};">
+                            <span class="kind">{{ strtoupper($kind) }}</span>
+                            {{ $line['label'] ?? $text }}
+                        </div>
+                    @elseif (!empty($segments))
                         <div class="line" style="text-align: {{ $align }};">@foreach ($segments as $segment)@php $sStyle = ''; if (!empty($segment['bold'])) $sStyle .= 'font-weight:700;'; if (!empty($segment['underline'])) $sStyle .= 'text-decoration:underline;'; $sw = (int) ($segment['width'] ?? 1); $sh = (int) ($segment['height'] ?? 1); if ($sw > 1) $sStyle .= 'font-size:' . (13 * $sw) . 'px;'; if ($sh > 1) $sStyle .= 'line-height:' . (1.45 * $sh) . ';'; @endphp<span style="{{ $sStyle }}">{{ $segment['text'] }}</span>@endforeach</div>
                     @else
                         <div class="line {{ $text === '' ? 'empty' : '' }}" style="{{ $style }}">{{ $text === '' ? "\u{00A0}" : $text }}</div>
