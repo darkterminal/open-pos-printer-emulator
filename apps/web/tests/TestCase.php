@@ -10,6 +10,9 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
+        // Tests must not depend on built frontend assets (CI has no Vite manifest).
+        $this->withoutVite();
+
         // Safety net: never let the test suite wipe a real database.
         if (app()->environment('testing')) {
             $connection = config('database.default');
