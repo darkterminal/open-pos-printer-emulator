@@ -687,6 +687,25 @@ export function parseEscPos(buffer: Buffer, widthDots = 576): ParseResult {
       continue;
     }
 
+    if (b === 0x1c) {
+      const c1 = buffer[i + 1];
+      if (c1 === 0x70) {
+        const n = buffer[i + 2];
+        const m = buffer[i + 3];
+        if (n === undefined || m === undefined) { warnings.push('truncated_fs_p'); break; }
+        pushCommand(offset, [b, c1, n, m], 'FS_p', { nv_image: n, mode: m });
+        pushPlaceholder('image', `[image] NV bit image n=${n} m=${m}`);
+        actions.push('image');
+        i += 3;
+        continue;
+      }
+
+      unknownCount += 1;
+      pushCommand(offset, c1 !== undefined ? [b, c1] : [b], 'FS_UNKNOWN', { command: c1 });
+      i += c1 !== undefined ? 1 : 0;
+      continue;
+    }
+
     if (b === 0x0a) {
       finalizeLine();
       pushCommand(offset, [0x0a], 'LF');

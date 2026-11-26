@@ -1,0 +1,23 @@
+{
+  "name": "nv-bit-image",
+  "description": "FS p print NV bit image placeholder",
+  "raw_base64": "G0AccAEACh1WAA==",
+  "expected": {
+    "status": "ok",
+    "warnings": [],
+    "actions": [
+      "initialize",
+      "image",
+      "cut"
+    ],
+    "command_names": [
+      "ESC_@",
+      "FS_p",
+      "LF",
+      "GS_V"
+    ],
+    "lines": [
+      { "kind": "image", "labelContains": "NV bit image n=1 m=0" }
+    ]
+  }
+}
