@@ -73,6 +73,27 @@ void registry.startDefault().catch((err) => {
   logger.error({ err }, 'failed to start default listener');
 });
 
+setInterval(() => {
+  for (const listener of registry.list()) {
+    void (async () => {
+      try {
+        const { postListenerStatus } = await import('./laravel-client.js');
+        await postListenerStatus({
+          external_id: listener.external_id,
+          status: listener.status,
+          host: listener.host,
+          port: listener.port,
+          last_heartbeat_at: listener.last_heartbeat_at ?? new Date().toISOString(),
+          error: listener.last_error,
+          fault_config: listener.fault_config,
+        });
+      } catch (err) {
+        logger.warn({ err, external_id: listener.external_id }, 'heartbeat post failed');
+      }
+    })();
+  }
+}, 30000);
+
 app.listen(config.port, '0.0.0.0', () => {
   logger.info({ port: config.port }, 'sidecar http server started');
 });

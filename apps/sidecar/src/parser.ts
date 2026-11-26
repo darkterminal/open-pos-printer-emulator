@@ -318,6 +318,28 @@ export function parseEscPos(buffer: Buffer, widthDots = 576): ParseResult {
         continue;
       }
 
+      if (c1 === 0x33) {
+        const n = buffer[i + 2];
+        if (n === undefined) { warnings.push('truncated_esc_3'); break; }
+        pushCommand(offset, [b, c1, n], 'ESC_3', { line_spacing_dots: n });
+        i += 2;
+        continue;
+      }
+
+      if (c1 === 0x32) {
+        pushCommand(offset, [b, c1], 'ESC_2', { description: 'Default line spacing' });
+        i += 1;
+        continue;
+      }
+
+      if (c1 === 0x4a) {
+        const n = buffer[i + 2];
+        if (n === undefined) { warnings.push('truncated_esc_J'); break; }
+        pushCommand(offset, [b, c1, n], 'ESC_J', { feed_dots: n });
+        i += 2;
+        continue;
+      }
+
       if (c1 === 0x74) {
         const n = buffer[i + 2];
         if (n === undefined) { warnings.push('truncated_esc_t'); break; }

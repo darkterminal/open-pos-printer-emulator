@@ -146,6 +146,13 @@ describe('parseEscPos', () => {
     expect(res.render_model.actions).toContain('cash_drawer');
   });
 
+  it('parses line spacing and feed commands', () => {
+    const res = parseEscPos(Buffer.from([0x1b, 0x33, 0x18, 0x1b, 0x32, 0x1b, 0x4a, 0x10, 0x0a]));
+    expect(res.commands.some((c) => c.name === 'ESC_3' && c.args?.line_spacing_dots === 24)).toBe(true);
+    expect(res.commands.some((c) => c.name === 'ESC_2')).toBe(true);
+    expect(res.commands.some((c) => c.name === 'ESC_J' && c.args?.feed_dots === 16)).toBe(true);
+  });
+
   it('skips unknown length-prefixed GS ( payloads without polluting text', () => {
     const payload = Buffer.from([0x41, 0x42, 0x43, 0x44]);
     const buf = Buffer.concat([

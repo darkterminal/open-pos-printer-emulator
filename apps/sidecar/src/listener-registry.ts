@@ -1,6 +1,7 @@
 import net from 'node:net';
 import { config } from './config.js';
 import { logger } from './logger.js';
+import { postListenerStatus } from './laravel-client.js';
 import { createTcpServer, type TcpServerHandle } from './tcp-server.js';
 import { DEFAULT_FAULT_CONFIG, type FaultConfig } from './types.js';
 
@@ -11,6 +12,7 @@ export interface ListenerInfo {
   status: 'listening' | 'stopped' | 'error';
   fault_config: FaultConfig;
   last_error: string | null;
+  last_heartbeat_at: string | null;
 }
 
 interface ManagedListener {
@@ -45,6 +47,7 @@ export class ListenerRegistry {
         status: 'stopped',
         fault_config: { ...DEFAULT_FAULT_CONFIG },
         last_error: null,
+        last_heartbeat_at: null,
       },
       tcp,
     });
@@ -63,6 +66,22 @@ export class ListenerRegistry {
     return { ...(this.listeners.get(externalId)?.info.fault_config ?? DEFAULT_FAULT_CONFIG) };
   }
 
+  private async report(entry: ManagedListener): Promise<void> {
+    try {
+      await postListenerStatus({
+        external_id: entry.info.external_id,
+        status: entry.info.status,
+        host: entry.info.host,
+        port: entry.info.port,
+        last_heartbeat_at: entry.info.last_heartbeat_at ?? new Date().toISOString(),
+        error: entry.info.last_error,
+        fault_config: entry.info.fault_config,
+      });
+    } catch (err) {
+      logger.warn({ err, external_id: entry.info.external_id }, 'listener status report failed');
+    }
+  }
+
   async startDefault(): Promise<void> {
     const externalId = config.listenerExternalId;
     const entry = this.listeners.get(externalId);
@@ -74,10 +93,13 @@ export class ListenerRegistry {
         entry.tcp!.server.off('error', reject);
         entry.info.status = 'listening';
         entry.info.last_error = null;
+        entry.info.last_heartbeat_at = new Date().toISOString();
         logger.info({ host: entry.info.host, port: entry.info.port, external_id: externalId }, 'tcp listener started');
         resolve();
       });
     });
+
+    void this.report(entry);
   }
 
   async ensureListener(externalId: string, host: string, port: number): Promise<ListenerInfo> {
@@ -97,6 +119,7 @@ export class ListenerRegistry {
         status: 'stopped',
         fault_config: existing?.info.fault_config ?? { ...DEFAULT_FAULT_CONFIG },
         last_error: null,
+        last_heartbeat_at: existing?.info.last_heartbeat_at ?? null,
       },
       tcp: null,
     };
@@ -124,11 +147,13 @@ export class ListenerRegistry {
         tcp.server.off('error', reject);
         entry.info.status = 'listening';
         entry.info.last_error = null;
+        entry.info.last_heartbeat_at = new Date().toISOString();
         logger.info({ host, port, external_id: externalId }, 'dynamic tcp listener started');
         resolve();
       });
     });
 
+    void this.report(entry);
     return { ...entry.info };
   }
 
@@ -144,6 +169,8 @@ export class ListenerRegistry {
     }
 
     entry.info.status = 'stopped';
+    entry.info.last_heartbeat_at = new Date().toISOString();
+    void this.report(entry);
     return { ...entry.info };
   }
 
@@ -151,6 +178,17 @@ export class ListenerRegistry {
     const entry = this.listeners.get(externalId);
     if (!entry) return null;
     entry.info.fault_config = normalizeFaults(faults);
+    entry.info.last_heartbeat_at = new Date().toISOString();
+    void this.report(entry);
+    return { ...entry.info };
+  }
+
+  heartbeat(externalId: string, patch?: { status?: ListenerInfo['status']; last_error?: string | null }): ListenerInfo | null {
+    const entry = this.listeners.get(externalId);
+    if (!entry) return null;
+    if (patch?.status) entry.info.status = patch.status;
+    if (patch && 'last_error' in patch) entry.info.last_error = patch.last_error ?? null;
+    entry.info.last_heartbeat_at = new Date().toISOString();
     return { ...entry.info };
   }
 
