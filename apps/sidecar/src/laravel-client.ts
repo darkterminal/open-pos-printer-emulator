@@ -55,3 +55,31 @@ export async function postListenerStatus(payload: {
     logger.warn({ status: res.status, body, external_id: payload.external_id }, 'failed to post listener status');
   }
 }
+
+export interface BootstrapListener {
+  external_id: string;
+  host: string;
+  port: number;
+  status?: string;
+  fault_config?: Partial<FaultConfig>;
+  last_error?: string | null;
+}
+
+export async function fetchBootstrapListeners(): Promise<BootstrapListener[]> {
+  const url = `${config.laravelInternalUrl.replace(/\/$/, '')}/listeners/bootstrap`;
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'accept': 'application/json',
+      'x-sidecar-token': config.sidecarSharedToken,
+    },
+  });
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`Bootstrap fetch failed: ${res.status} ${body}`);
+  }
+
+  const payload = await res.json().catch(() => ({}));
+  return Array.isArray(payload?.data) ? payload.data as BootstrapListener[] : [];
+}

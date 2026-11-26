@@ -102,6 +102,24 @@ export class ListenerRegistry {
     void this.report(entry);
   }
 
+  async bootstrapFromLaravel(fetcher: () => Promise<Array<{ external_id: string; host: string; port: number; fault_config?: Partial<FaultConfig> }>>): Promise<void> {
+    try {
+      const listeners = await fetcher();
+      for (const item of listeners) {
+        if (!item?.external_id || !item.host || !Number.isInteger(item.port)) continue;
+        try {
+          const info = await this.ensureListener(item.external_id, item.host, item.port);
+          if (item.fault_config) this.setFaults(item.external_id, item.fault_config);
+          logger.info({ external_id: info.external_id, port: info.port }, 'listener bootstrapped from laravel');
+        } catch (err) {
+          logger.warn({ err, external_id: item.external_id }, 'failed to bootstrap listener');
+        }
+      }
+    } catch (err) {
+      logger.warn({ err }, 'failed to fetch listener bootstrap config');
+    }
+  }
+
   async ensureListener(externalId: string, host: string, port: number): Promise<ListenerInfo> {
     const existing = this.listeners.get(externalId);
     if (existing) {

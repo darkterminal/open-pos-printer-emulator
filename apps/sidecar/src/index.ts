@@ -3,6 +3,7 @@ import { pinoHttp } from 'pino-http';
 import { config } from './config.js';
 import { logger } from './logger.js';
 import { ListenerRegistry } from './listener-registry.js';
+import { fetchBootstrapListeners } from './laravel-client.js';
 
 const startedAt = Date.now();
 const registry = new ListenerRegistry();
@@ -69,9 +70,12 @@ app.patch('/control/v1/listeners/:externalId/faults', authMiddleware, (req, res)
   res.status(200).json({ data: listener });
 });
 
-void registry.startDefault().catch((err) => {
-  logger.error({ err }, 'failed to start default listener');
-});
+void (async () => {
+  await registry.startDefault().catch((err) => {
+    logger.error({ err }, 'failed to start default listener');
+  });
+  await registry.bootstrapFromLaravel(fetchBootstrapListeners);
+})();
 
 setInterval(() => {
   for (const listener of registry.list()) {
