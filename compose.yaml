@@ -44,7 +44,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    command: ["sh", "-lc", "php artisan serve --host=0.0.0.0 --port=8080"]
+    command: ["sh", "-lc", "php artisan sidecar:sync-listeners || true; php artisan serve --host=0.0.0.0 --port=8080"]
 
   reverb:
     image: escpos-emulator-web:dev

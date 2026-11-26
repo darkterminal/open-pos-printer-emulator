@@ -62,8 +62,12 @@
                 <td><span class="badge">{{ $listener->status }}</span></td>
                 <td>
                     <span class="status-pill {{ $scClass }}">{{ $scStatus }}</span>
-                    @if (!empty($sidecar['last_error']))
-                        <div class="muted" style="margin-top:4px; color:#ff7b72;">{{ $sidecar['last_error'] }}</div>
+                    @php $heartbeat = $listener->last_heartbeat_at; @endphp
+                    @if ($heartbeat)
+                        <div class="muted" style="margin-top:4px;">Heartbeat: {{ $heartbeat->diffForHumans() }}</div>
+                    @endif
+                    @if (!empty($sidecar['last_error']) || !empty($listener->last_error))
+                        <div class="muted" style="margin-top:4px; color:#ff7b72;">{{ $sidecar['last_error'] ?? $listener->last_error }}</div>
                     @endif
                 </td>
                 <td>{{ $listener->print_jobs_count }}</td>

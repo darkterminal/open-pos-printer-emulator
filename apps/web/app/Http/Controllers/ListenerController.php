@@ -7,10 +7,12 @@ use App\Services\SidecarClient;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ListenerController extends Controller
 {
-    public function index(SidecarClient $sidecar): View
+    public function index(Request $request, SidecarClient $sidecar): View|Response
     {
         $listeners = Listener::query()
             ->with('printerProfile:id,name')
@@ -28,6 +30,25 @@ class ListenerController extends Controller
             }
         } catch (\Throwable $e) {
             report($e);
+        }
+
+        if ($request->boolean('ui') === true && $request->query('ui') === 'inertia') {
+            return Inertia::render('Listeners/Index', [
+                'listeners' => $listeners->map(fn (Listener $listener) => [
+                    'id' => $listener->id,
+                    'external_id' => $listener->external_id,
+                    'name' => $listener->name,
+                    'host' => $listener->host,
+                    'port' => $listener->port,
+                    'status' => $listener->status,
+                    'last_error' => $listener->last_error,
+                    'last_heartbeat_at' => optional($listener->last_heartbeat_at)->toIso8601String(),
+                    'print_jobs_count' => $listener->print_jobs_count,
+                    'printer_profile' => $listener->printerProfile?->only(['name']),
+                    'sidecar' => $sidecarById[$listener->external_id] ?? null,
+                    'fault_config' => $sidecarById[$listener->external_id]['fault_config'] ?? ($listener->fault_config_json ?? []),
+                ])->values(),
+            ]);
         }
 
         return view('listeners.index', [

@@ -340,6 +340,38 @@ export function parseEscPos(buffer: Buffer, widthDots = 576): ParseResult {
         continue;
       }
 
+      if (c1 === 0x44) {
+        const tabStops: number[] = [];
+        let j = i + 2;
+        while (j < buffer.length && buffer[j] !== 0x00) {
+          tabStops.push(buffer[j]);
+          j += 1;
+          if (tabStops.length > 32) { warnings.push('esc_D_too_many_tabs'); break; }
+        }
+        if (j >= buffer.length) { warnings.push('truncated_esc_D'); break; }
+        pushCommand(offset, buffer.subarray(i, j + 1), 'ESC_D', { tab_stops: tabStops });
+        i = j;
+        continue;
+      }
+
+      if (c1 === 0x24) {
+        const nL = buffer[i + 2];
+        const nH = buffer[i + 3];
+        if (nL === undefined || nH === undefined) { warnings.push('truncated_esc_$'); break; }
+        pushCommand(offset, [b, c1, nL, nH], 'ESC_$', { absolute_position_dots: nL + nH * 256 });
+        i += 3;
+        continue;
+      }
+
+      if (c1 === 0x5c) {
+        const nL = buffer[i + 2];
+        const nH = buffer[i + 3];
+        if (nL === undefined || nH === undefined) { warnings.push('truncated_esc_\\'); break; }
+        pushCommand(offset, [b, c1, nL, nH], 'ESC_\\', { relative_position_dots: nL + nH * 256 });
+        i += 3;
+        continue;
+      }
+
       if (c1 === 0x74) {
         const n = buffer[i + 2];
         if (n === undefined) { warnings.push('truncated_esc_t'); break; }
@@ -650,7 +682,7 @@ export function parseEscPos(buffer: Buffer, widthDots = 576): ParseResult {
     if (b === 0x10 && buffer[i + 1] === 0x04) {
       const n = buffer[i + 2];
       if (n === undefined) { warnings.push('truncated_dle_eot'); break; }
-      pushCommand(offset, [b, 0x04, n], 'DLE_EOT', { status: n });
+      pushCommand(offset, [b, 0x04, n], 'DLE_EOT', { realtime_status: n });
       i += 2;
       continue;
     }

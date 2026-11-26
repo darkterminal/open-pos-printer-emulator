@@ -153,6 +153,18 @@ describe('parseEscPos', () => {
     expect(res.commands.some((c) => c.name === 'ESC_J' && c.args?.feed_dots === 16)).toBe(true);
   });
 
+  it('parses absolute/relative horizontal position commands', () => {
+    const res = parseEscPos(Buffer.from([0x1b, 0x24, 0x20, 0x00, 0x1b, 0x5c, 0x10, 0x00]));
+    expect(res.commands.some((c) => c.name === 'ESC_$' && c.args?.absolute_position_dots === 32)).toBe(true);
+    expect(res.commands.some((c) => c.name === 'ESC_\\' && c.args?.relative_position_dots === 16)).toBe(true);
+  });
+
+  it('parses ESC D tab stops and DLE EOT status request', () => {
+    const res = parseEscPos(Buffer.from([0x1b, 0x44, 0x04, 0x08, 0x00, 0x10, 0x04, 0x01]));
+    expect(res.commands.some((c) => c.name === 'ESC_D')).toBe(true);
+    expect(res.commands.some((c) => c.name === 'DLE_EOT' && c.args?.realtime_status === 1)).toBe(true);
+  });
+
   it('skips unknown length-prefixed GS ( payloads without polluting text', () => {
     const payload = Buffer.from([0x41, 0x42, 0x43, 0x44]);
     const buf = Buffer.concat([
