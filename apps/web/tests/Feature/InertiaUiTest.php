@@ -76,8 +76,9 @@ class InertiaUiTest extends TestCase
         $response->assertViewIs('app');
         $page = $this->inertiaPage($response);
         $this->assertSame('Jobs/Index', $page['component']);
-        $this->assertNotEmpty($page['props']['jobs'] ?? []);
-        $this->assertSame('job_inertia_1', $page['props']['jobs'][0]['external_id']);
+        $jobs = $page['props']['jobs']['data'] ?? $page['props']['jobs'] ?? [];
+        $this->assertNotEmpty($jobs);
+        $this->assertSame('job_inertia_1', $jobs[0]['external_id']);
     }
 
     public function test_listeners_index_inertia_renders_component_and_props(): void

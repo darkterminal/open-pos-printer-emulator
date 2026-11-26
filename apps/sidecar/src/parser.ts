@@ -400,18 +400,24 @@ export function parseEscPos(buffer: Buffer, widthDots = 576): ParseResult {
         const nH = buffer[i + 4];
         if (m === undefined || nL === undefined || nH === undefined) { warnings.push('truncated_esc_*'); break; }
 
-        // Column-major bit image: dotsPerColumn is 8 (m 0-1) or 24 (m 32-33).
+        // Column-major bit image: 8-dot modes (0,1) and 24-dot modes (32,33).
         const supportedMode = m === 0 || m === 1 || m === 32 || m === 33;
-        const dotsPerColumn = m === 0 || m === 1 ? 8 : 24;
+        const dotsPerColumn = m === 32 || m === 33 ? 24 : 8;
         const bytesPerColumn = dotsPerColumn / 8;
         const columns = nL + nH * 256;
         const dataBytes = columns * bytesPerColumn;
         const end = i + 5 + dataBytes;
+        const modeLabel = ({ 0: '8-dot single', 1: '8-dot double', 32: '24-dot single', 33: '24-dot double' } as Record<number, string>)[m] ?? `unsupported(${m})`;
 
-        pushCommand(offset, [b, c1, m, nL, nH], 'ESC_*', { mode: m, columns, bytes: dataBytes });
+        pushCommand(offset, [b, c1, m, nL, nH], 'ESC_*', { mode: m, columns, bytes: dataBytes, supported: supportedMode });
         const payload = buffer.subarray(i + 5, Math.min(end, buffer.length));
-        const raster = supportedMode ? decodeRasterColumnMajor(m, nL, nH, payload) : null;
-        pushPlaceholder('image', `[image] bit image ${columns}x${dotsPerColumn} dots`, raster ?? undefined);
+        if (!supportedMode) {
+          warnings.push(`unsupported_esc_star_mode:${m}`);
+          pushPlaceholder('image', `[image] bit image ${modeLabel} ${columns} cols`);
+        } else {
+          const raster = decodeRasterColumnMajor(m, nL, nH, payload);
+          pushPlaceholder('image', `[image] bit image ${modeLabel} ${columns}x${dotsPerColumn} dots`, raster ?? undefined);
+        }
         actions.push('image');
         if (end > buffer.length) {
           warnings.push('truncated_esc_*_payload');

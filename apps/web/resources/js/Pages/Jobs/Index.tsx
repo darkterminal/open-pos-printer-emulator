@@ -1,9 +1,13 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { useEffect, useRef, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import { AppShell } from '@/components/app-shell';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
@@ -11,6 +15,7 @@ type Job = {
   id: number;
   external_id: string;
   status: string;
+  listener_id?: number | null;
   listener?: { name?: string; external_id?: string } | null;
   source_ip?: string | null;
   source_port?: number | null;
@@ -20,6 +25,9 @@ type Job = {
   received_at?: string | null;
 };
 
+type ListenerOpt = { id: number; name: string; external_id: string };
+type Filters = { q: string; status: string; listener_id: string; per_page: string };
+type Pagination = { current_page: number; last_page: number; per_page: number; total: number; from: number | null; to: number | null };
 type ConnectionState = 'connecting' | 'live' | 'polling';
 
 function jobStatus(status: string, warnings: number) {
@@ -37,27 +45,52 @@ function ConnectionBadge({ state }: { state: ConnectionState }) {
   return <Badge variant="secondary">connecting</Badge>;
 }
 
-export default function JobsIndex({ jobs: initialJobs }: { jobs: Job[] }) {
-  const [jobs, setJobs] = useState<Job[]>(initialJobs);
+function matchesFilters(job: Job, filters: Filters): boolean {
+  const q = filters.q.trim().toLowerCase();
+  if (q) {
+    const hay = `${job.external_id} ${job.correlation_id ?? ''} ${job.source_ip ?? ''}`.toLowerCase();
+    if (!hay.includes(q)) return false;
+  }
+  if (filters.status && job.status !== filters.status) return false;
+  if (filters.listener_id && String(job.listener_id ?? '') !== filters.listener_id) return false;
+  return true;
+}
+
+export default function JobsIndex({ jobs: initialJobs, listeners = [], filters: initialFilters, pagination }: {
+  jobs: { data: Job[] } | Job[];
+  listeners?: ListenerOpt[];
+  filters?: Filters;
+  pagination?: Pagination;
+}) {
+  const initialList = Array.isArray(initialJobs) ? initialJobs : (initialJobs.data ?? []);
+  const filters = initialFilters ?? { q: '', status: '', listener_id: '', per_page: '25' };
+  const [jobs, setJobs] = useState<Job[]>(initialList);
   const [connection, setConnection] = useState<ConnectionState>('connecting');
-  const lastIdRef = useRef<number>(initialJobs[0]?.id ?? 0);
+  const [form, setForm] = useState<Filters>(filters);
+  const lastIdRef = useRef<number>(initialList[0]?.id ?? 0);
+  const filtersRef = useRef(filters);
 
   useEffect(() => {
-    setJobs(initialJobs);
-    lastIdRef.current = Math.max(lastIdRef.current, initialJobs[0]?.id ?? 0);
-  }, [initialJobs]);
+    setJobs(initialList);
+    setForm(filters);
+    filtersRef.current = filters;
+    lastIdRef.current = Math.max(lastIdRef.current, initialList[0]?.id ?? 0);
+  }, [JSON.stringify(initialList.map((j) => j.id)), JSON.stringify(filters)]);
 
   useEffect(() => {
     let polling: ReturnType<typeof setInterval> | null = null;
     let cancelled = false;
+    const canLiveMerge = (pagination?.current_page ?? 1) === 1;
 
     const mergeJobs = (incoming: Job[]) => {
-      if (cancelled || incoming.length === 0) return;
+      if (cancelled || incoming.length === 0 || !canLiveMerge) return;
+      const applicable = incoming.filter((j) => matchesFilters(j, filtersRef.current));
+      if (applicable.length === 0) return;
       setJobs((prev) => {
         const seen = new Set(prev.map((j) => j.id));
-        const fresh = incoming.filter((j) => !seen.has(j.id));
+        const fresh = applicable.filter((j) => !seen.has(j.id));
         if (fresh.length === 0) return prev;
-        const merged = [...fresh, ...prev].sort((a, b) => b.id - a.id).slice(0, 100);
+        const merged = [...fresh, ...prev].sort((a, b) => b.id - a.id).slice(0, Number(filtersRef.current.per_page || 25));
         lastIdRef.current = Math.max(lastIdRef.current, merged[0]?.id ?? 0);
         return merged;
       });
@@ -68,12 +101,12 @@ export default function JobsIndex({ jobs: initialJobs }: { jobs: Job[] }) {
       if (polling) return;
       const poll = async () => {
         try {
-          const res = await window.axios.get('/jobs/feed', { params: { after_id: lastIdRef.current } });
+          const res = await window.axios.get('/jobs/feed', {
+            params: { after_id: lastIdRef.current, q: filtersRef.current.q || undefined, status: filtersRef.current.status || undefined, listener_id: filtersRef.current.listener_id || undefined },
+          });
           const data = Array.isArray(res.data?.data) ? (res.data.data as Job[]) : [];
           mergeJobs(data);
-        } catch {
-          // keep polling fallback silent; next interval retries
-        }
+        } catch { /* silent */ }
       };
       void poll();
       polling = setInterval(poll, 5000);
@@ -87,10 +120,7 @@ export default function JobsIndex({ jobs: initialJobs }: { jobs: Job[] }) {
 
     try {
       const channel = echo.channel('jobs');
-      channel.listen('.job.ingested', (payload: Job) => {
-        mergeJobs([payload]);
-      });
-
+      channel.listen('.job.ingested', (payload: Job) => mergeJobs([payload]));
       const pusher = echo.connector?.pusher;
       if (pusher?.connection) {
         const onConnected = () => setConnection('live');
@@ -99,17 +129,13 @@ export default function JobsIndex({ jobs: initialJobs }: { jobs: Job[] }) {
         pusher.connection.bind('unavailable', onUnavailable);
         pusher.connection.bind('failed', onUnavailable);
         pusher.connection.bind('disconnected', onUnavailable);
-        if (pusher.connection.state === 'connected') setConnection('live');
-        else setConnection('connecting');
+        if (pusher.connection.state === 'connected') setConnection('live'); else setConnection('connecting');
       } else {
         setConnection('live');
       }
-
-      // Safety net: if websocket never becomes live, fall back.
       const fallbackTimer = setTimeout(() => {
         if (!cancelled) setConnection((s) => (s === 'live' ? s : (startPolling(), 'polling')));
       }, 6000);
-
       return () => {
         cancelled = true;
         clearTimeout(fallbackTimer);
@@ -120,23 +146,72 @@ export default function JobsIndex({ jobs: initialJobs }: { jobs: Job[] }) {
       startPolling();
       return () => { cancelled = true; if (polling) clearInterval(polling); };
     }
-  }, []);
+  }, [pagination?.current_page, JSON.stringify(filters)]);
+
+  const submitFilters = (e: FormEvent) => {
+    e.preventDefault();
+    router.get('/jobs', { ...form, page: 1 }, { preserveState: true, preserveScroll: true, replace: true });
+  };
+
+  const resetFilters = () => {
+    const clean = { q: '', status: '', listener_id: '', per_page: form.per_page || '25' };
+    setForm(clean);
+    router.get('/jobs', { ...clean, page: 1 }, { preserveState: true, preserveScroll: true, replace: true });
+  };
+
+  const goPage = (page: number) => {
+    router.get('/jobs', { ...filters, page }, { preserveState: true, preserveScroll: true });
+  };
 
   return (
     <AppShell>
       <Head title="Jobs - Open POS Printer Emulator" />
       <Card>
-        <CardHeader className="flex-row items-center justify-between space-y-0">
+        <CardHeader className="flex-row items-center justify-between space-y-0 gap-4">
           <div>
             <CardTitle>Job History</CardTitle>
-            <p className="mt-1 text-sm text-muted-foreground">Recent ESC/POS jobs ingested by the sidecar. Live via Reverb with polling fallback.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Recent ESC/POS jobs. Live via Reverb with polling fallback. Filters apply to list and feed.</p>
           </div>
           <div className="flex items-center gap-2">
             <ConnectionBadge state={connection} />
-            <Badge variant="outline">Total shown: {jobs.length}</Badge>
+            <Badge variant="outline">Total: {pagination?.total ?? jobs.length}</Badge>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <form onSubmit={submitFilters} className="grid gap-3 md:grid-cols-5 md:items-end">
+            <div className="space-y-1 md:col-span-2">
+              <Label>Search</Label>
+              <Input value={form.q} onChange={(e) => setForm({ ...form, q: e.target.value })} placeholder="external_id, correlation_id, source IP" />
+            </div>
+            <div className="space-y-1">
+              <Label>Status</Label>
+              <Select value={form.status || '__all__'} onValueChange={(v) => setForm({ ...form, status: v === '__all__' ? '' : v })}>
+                <SelectTrigger><SelectValue placeholder="All statuses" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">All statuses</SelectItem>
+                  <SelectItem value="parsed">parsed</SelectItem>
+                  <SelectItem value="partial">partial</SelectItem>
+                  <SelectItem value="parse_error">parse_error</SelectItem>
+                  <SelectItem value="received">received</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>Listener</Label>
+              <Select value={form.listener_id || '__all__'} onValueChange={(v) => setForm({ ...form, listener_id: v === '__all__' ? '' : v })}>
+                <SelectTrigger><SelectValue placeholder="All listeners" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">All listeners</SelectItem>
+                  {listeners.map((l) => <SelectItem key={l.id} value={String(l.id)}>{l.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex gap-2">
+              <Button type="submit">Filter</Button>
+              <Button type="button" variant="outline" onClick={resetFilters}>Reset</Button>
+            </div>
+          </form>
+
           <Table>
             <TableHeader>
               <TableRow>
@@ -170,12 +245,22 @@ export default function JobsIndex({ jobs: initialJobs }: { jobs: Job[] }) {
               {jobs.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={7}>
-                    <EmptyState title="No jobs yet" description="Send an ESC/POS payload to a listener TCP port to see it here." />
+                    <EmptyState title="No jobs found" description="Adjust filters or send an ESC/POS payload to a listener TCP port." />
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
+
+          {pagination && pagination.last_page > 1 && (
+            <div className="flex items-center justify-between text-sm">
+              <div className="text-muted-foreground">Page {pagination.current_page} of {pagination.last_page} ({pagination.total} jobs)</div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" disabled={pagination.current_page <= 1} onClick={() => goPage(pagination.current_page - 1)}>Previous</Button>
+                <Button variant="outline" size="sm" disabled={pagination.current_page >= pagination.last_page} onClick={() => goPage(pagination.current_page + 1)}>Next</Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </AppShell>
