@@ -71,6 +71,16 @@
                         <div class="placeholder" style="text-align: {{ $align }};">
                             <span class="kind">{{ strtoupper($kind) }}</span>
                             {{ $line['label'] ?? $text }}
+                            @if (!empty($line['raster']['data_base64']))
+                                <canvas
+                                    class="raster-preview"
+                                    data-raster-b64="{{ $line['raster']['data_base64'] }}"
+                                    data-raster-width="{{ (int) ($line['raster']['width_dots'] ?? 0) }}"
+                                    data-raster-height="{{ (int) ($line['raster']['height'] ?? 0) }}"
+                                    style="display:block; margin-top:8px; width:100%; max-width:100%; height:auto; image-rendering:pixelated; background:#fff; border:1px solid #cfcabf;"
+                                ></canvas>
+                                <div class="muted" style="margin-top:4px; font-size:10px; color:#6b6b6b;">{{ (int) ($line['raster']['width_dots'] ?? 0) }}x{{ (int) ($line['raster']['height'] ?? 0) }} dots</div>
+                            @endif
                         </div>
                     @elseif (!empty($segments))
                         <div class="line" style="text-align: {{ $align }};">@foreach ($segments as $segment)@php $sStyle = ''; if (!empty($segment['bold'])) $sStyle .= 'font-weight:700;'; if (!empty($segment['underline'])) $sStyle .= 'text-decoration:underline;'; $sw = (int) ($segment['width'] ?? 1); $sh = (int) ($segment['height'] ?? 1); if ($sw > 1) $sStyle .= 'font-size:' . (13 * $sw) . 'px;'; if ($sh > 1) $sStyle .= 'line-height:' . (1.45 * $sh) . ';'; @endphp<span style="{{ $sStyle }}">{{ $segment['text'] }}</span>@endforeach</div>
@@ -172,4 +182,40 @@
         @endif
     </details>
 </div>
+<script>
+(() => {
+    const canvases = document.querySelectorAll('canvas.raster-preview');
+    canvases.forEach((canvas) => {
+        const b64 = canvas.dataset.rasterB64 || '';
+        const width = parseInt(canvas.dataset.rasterWidth || '0', 10);
+        const height = parseInt(canvas.dataset.rasterHeight || '0', 10);
+        if (!b64 || !width || !height) return;
+
+        const raw = atob(b64);
+        const bytes = new Uint8Array(raw.length);
+        for (let i = 0; i < raw.length; i += 1) bytes[i] = raw.charCodeAt(i);
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        const image = ctx.createImageData(width, height);
+        const rowBytes = Math.ceil(width / 8);
+
+        for (let y = 0; y < height; y += 1) {
+            for (let x = 0; x < width; x += 1) {
+                const byteIndex = y * rowBytes + Math.floor(x / 8);
+                const bit = (bytes[byteIndex] >> (7 - (x % 8))) & 1;
+                const pixel = (y * width + x) * 4;
+                const color = bit ? 0 : 255;
+                image.data[pixel] = color;
+                image.data[pixel + 1] = color;
+                image.data[pixel + 2] = color;
+                image.data[pixel + 3] = 255;
+            }
+        }
+        ctx.putImageData(image, 0, 0);
+    });
+})();
+</script>
 @endcomponent

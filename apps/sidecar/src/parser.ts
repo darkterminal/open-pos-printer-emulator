@@ -19,6 +19,14 @@ export interface RenderSegment {
 
 export type RenderLineKind = 'text' | 'barcode' | 'qrcode' | 'image';
 
+export interface RasterPreview {
+  width_dots: number;
+  height: number;
+  /** Raw 1bpp raster bytes, row-major, MSB first. */
+  data_base64: string;
+  bytes: number;
+}
+
 export interface RenderLine {
   text: string;
   align: 'left' | 'center' | 'right';
@@ -29,6 +37,7 @@ export interface RenderLine {
   /** Placeholder lines (barcode/qr/image) carry a kind so the UI can style them. */
   kind?: RenderLineKind;
   label?: string;
+  raster?: RasterPreview;
   segments?: RenderSegment[];
 }
 
@@ -85,6 +94,45 @@ function bytesToString(bytes: Buffer): string {
     out += b >= 0x20 && b <= 0x7e ? String.fromCharCode(b) : b >= 0x80 ? String.fromCharCode(b) : '?';
   }
   return out;
+}
+
+function decodeRasterColumnMajor(
+  mode: number,
+  nL: number,
+  nH: number,
+  data: Buffer,
+): RasterPreview | null {
+  const k = nL + nH * 256;
+  if (k <= 0) return null;
+
+  const dotsPerColumn = mode === 0 || mode === 1 ? 8 : 24;
+  const bytesPerColumn = dotsPerColumn / 8;
+  const expected = k * bytesPerColumn;
+  if (data.length < expected) return null;
+
+  const widthDots = k;
+  const height = dotsPerColumn;
+  const widthBytes = Math.ceil(widthDots / 8);
+  const out = Buffer.alloc(widthBytes * height);
+
+  for (let column = 0; column < k; column += 1) {
+    const base = column * bytesPerColumn;
+    for (let bitRow = 0; bitRow < dotsPerColumn; bitRow += 1) {
+      const byteIndex = base + Math.floor(bitRow / 8);
+      const bitMask = 0x80 >> (bitRow % 8);
+      if ((data[byteIndex] & bitMask) === 0) continue;
+
+      const outIndex = bitRow * widthBytes + Math.floor(column / 8);
+      out[outIndex] |= 0x80 >> (column % 8);
+    }
+  }
+
+  return {
+    width_dots: widthDots,
+    height,
+    data_base64: out.toString('base64'),
+    bytes: expected,
+  };
 }
 
 interface TextState {
@@ -158,9 +206,9 @@ export function parseEscPos(buffer: Buffer, widthDots = 576): ParseResult {
     if (segments.length > 0) finalizeLine();
   };
 
-  const pushPlaceholder = (kind: RenderLineKind, label: string) => {
+  const pushPlaceholder = (kind: RenderLineKind, label: string, raster?: RasterPreview) => {
     flushText();
-    lines.push({
+    const line: RenderLine = {
       text: label,
       align: state.align,
       bold: false,
@@ -169,7 +217,9 @@ export function parseEscPos(buffer: Buffer, widthDots = 576): ParseResult {
       height: 1,
       kind,
       label,
-    });
+    };
+    if (raster) line.raster = raster;
+    lines.push(line);
   };
 
   const pushCommand = (offset: number, bytes: number[], name: string, args?: Record<string, unknown>) => {
@@ -295,10 +345,19 @@ export function parseEscPos(buffer: Buffer, widthDots = 576): ParseResult {
         const nL = buffer[i + 3];
         const nH = buffer[i + 4];
         if (m === undefined || nL === undefined || nH === undefined) { warnings.push('truncated_esc_*'); break; }
-        const dataBytes = nL + nH * 256;
+
+        // Column-major bit image: dotsPerColumn is 8 (m 0-1) or 24 (m 32-33).
+        const supportedMode = m === 0 || m === 1 || m === 32 || m === 33;
+        const dotsPerColumn = m === 0 || m === 1 ? 8 : 24;
+        const bytesPerColumn = dotsPerColumn / 8;
+        const columns = nL + nH * 256;
+        const dataBytes = columns * bytesPerColumn;
         const end = i + 5 + dataBytes;
-        pushCommand(offset, [b, c1, m, nL, nH], 'ESC_*', { mode: m, bytes: dataBytes });
-        pushPlaceholder('image', `[image] bit image ${dataBytes} bytes`);
+
+        pushCommand(offset, [b, c1, m, nL, nH], 'ESC_*', { mode: m, columns, bytes: dataBytes });
+        const payload = buffer.subarray(i + 5, Math.min(end, buffer.length));
+        const raster = supportedMode ? decodeRasterColumnMajor(m, nL, nH, payload) : null;
+        pushPlaceholder('image', `[image] bit image ${columns}x${dotsPerColumn} dots`, raster ?? undefined);
         actions.push('image');
         if (end > buffer.length) {
           warnings.push('truncated_esc_*_payload');
@@ -495,13 +554,28 @@ export function parseEscPos(buffer: Buffer, widthDots = 576): ParseResult {
         const height = yL + yH * 256;
         const dataBytes = widthBytes * height;
         const end = i + 8 + dataBytes;
+        const payload = buffer.subarray(i + 8, Math.min(end, buffer.length));
+
+        const MAX_PREVIEW_BYTES = 8192;
+        const raster: RasterPreview | undefined =
+          payload.length === dataBytes && dataBytes > 0 && dataBytes <= MAX_PREVIEW_BYTES
+            ? {
+                width_dots: widthBytes * 8,
+                height,
+                data_base64: payload.toString('base64'),
+                bytes: dataBytes,
+              }
+            : undefined;
+
+        if (dataBytes > MAX_PREVIEW_BYTES) warnings.push(`raster_preview_skipped:${dataBytes}_bytes`);
+
         pushCommand(offset, [b, c1, 0x30, m, xL, xH, yL, yH], 'GS_v_0', {
           mode: m,
           width_dots: widthBytes * 8,
           height,
           bytes: dataBytes,
         });
-        pushPlaceholder('image', `[image] raster ${widthBytes * 8}x${height} dots`);
+        pushPlaceholder('image', `[image] raster ${widthBytes * 8}x${height} dots`, raster);
         actions.push('image');
         if (end > buffer.length) {
           warnings.push('truncated_gs_v_0_payload');

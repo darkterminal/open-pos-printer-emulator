@@ -118,9 +118,26 @@ describe('parseEscPos', () => {
     const res = parseEscPos(buf);
     const line = res.render_model.lines.find((l) => l.kind === 'image');
     expect(line?.label).toContain('16x2');
+    expect(line?.raster).toEqual({
+      width_dots: 16,
+      height: 2,
+      data_base64: 'QUJDRA==',
+      bytes: 4,
+    });
     expect(res.render_model.actions).toContain('image');
     expect(res.commands.some((c) => c.name === 'BYTE_UNKNOWN')).toBe(false);
     expect(res.status).toBe('ok');
+  });
+
+  it('decodes column-major ESC * bit images into raster preview', () => {
+    // mode 0: 8-dot single density, 2 columns, 1 byte per column.
+    // col0=0x80 => top dot, col1=0x01 => bottom dot.
+    const buf = Buffer.from([0x1b, 0x2a, 0x00, 0x02, 0x00, 0x80, 0x01]);
+    const res = parseEscPos(buf);
+    const line = res.render_model.lines.find((l) => l.kind === 'image');
+    expect(line?.raster?.width_dots).toBe(2);
+    expect(line?.raster?.height).toBe(8);
+    expect(line?.raster?.data_base64).toBe(Buffer.from([0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40]).toString('base64'));
   });
 
   it('records cash drawer kick as an action', () => {

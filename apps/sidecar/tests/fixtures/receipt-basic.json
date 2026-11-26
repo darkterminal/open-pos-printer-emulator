@@ -1,0 +1,58 @@
+{
+  "name": "receipt-basic",
+  "description": "Basic receipt with CP1252 euro, align, bold, barcode, QR, raster image, cash drawer, cut",
+  "raw_base64": "G0AbdBCAChthARtFAU9QRU4gUE9TIEVNVUxBVE9SG0UACkNvZmZlZSAgICAgICAgMTUwMDAKG2ECUnAgMTUuMDAwCh1oUB1rADEyMzQ1Njc4OTAxMgAKHShrFgAxUDBodHRwczovL2V4YW1wbGUuY29tHShrAwAxUTAKHXYwAAIAAgBBQkNEG3AAGfodVgA=",
+  "expected": {
+    "status": "ok",
+    "warnings": [],
+    "actions": [
+      "initialize",
+      "barcode",
+      "qrcode",
+      "image",
+      "cash_drawer",
+      "cut"
+    ],
+    "lines": [
+      {
+        "text": "€"
+      },
+      {
+        "text": "OPEN POS EMULATOR",
+        "align": "center",
+        "bold": true
+      },
+      {
+        "text": "Coffee        15000",
+        "align": "center"
+      },
+      {
+        "text": "Rp 15.000",
+        "align": "right"
+      },
+      {
+        "kind": "barcode",
+        "labelContains": "UPC-A 123456789012"
+      },
+      {
+        "text": ""
+      },
+      {
+        "kind": "qrcode",
+        "label": "[qr] https://example.com"
+      },
+      {
+        "text": ""
+      },
+      {
+        "kind": "image",
+        "labelContains": "raster 16x2",
+        "raster": {
+          "width_dots": 16,
+          "height": 2,
+          "bytes": 4
+        }
+      }
+    ]
+  }
+}
