@@ -74,6 +74,8 @@ kiri compose exec web php artisan migrate --seed
 # TCP listener: localhost:9100
 ```
 
+> Catatan Kiri: jika build gagal karena mirror BuildKit `172.17.0.1:47391` timeout, gunakan builder sementara `kiri-nomirror` (lihat `.internal/notes/kiri-buildkit-diagnosis.md`, gitignored) untuk build image dengan `--load`, lalu jalankan `kiri compose up -d --no-build`.
+
 ## Verifikasi Cepat
 
 Kirim payload ESC/POS sederhana ke listener:
