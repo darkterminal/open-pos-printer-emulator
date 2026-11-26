@@ -98,4 +98,19 @@ class JobDetailTest extends TestCase
         $response->assertSee('idle_timeout_finalize');
         $response->assertSee('job_detail_1');
     }
+
+    public function test_job_detail_inertia_page_renders_props(): void
+    {
+        $job = $this->makeJob();
+        $user = User::query()->firstOrFail();
+
+        $response = $this->actingAs($user)->get(route('jobs.show', [$job, 'ui' => 'inertia']));
+
+        $response->assertOk();
+        $response->assertViewIs('app');
+        $page = data_get($response->original->getData(), 'page');
+        $page = is_array($page) ? $page : json_decode((string) $page, true);
+        $this->assertSame('Jobs/Show', $page['component'] ?? null);
+        $this->assertSame('job_detail_1', $page['props']['job']['external_id'] ?? null);
+    }
 }

@@ -9,6 +9,8 @@ interface ExpectedLine {
   kind?: string;
   align?: string;
   bold?: boolean;
+  width?: number;
+  height?: number;
   label?: string;
   labelContains?: string;
   raster?: { width_dots: number; height: number; bytes: number };
@@ -80,5 +82,34 @@ describe('golden ESC/POS fixtures', () => {
       expect(res.warnings).toContain(warning);
     }
     expect(res.render_model.actions).toEqual(fixture.expected.actions);
+  });
+
+  it('text-size-and-cut fixture matches size and cut actions', () => {
+    const fixture = loadFixture('text-size-and-cut');
+    const res = parseEscPos(Buffer.from(fixture.raw_base64, 'base64'));
+
+    expect(res.status).toBe(fixture.expected.status);
+    expect(res.warnings).toEqual(fixture.expected.warnings);
+    expect(res.render_model.actions).toEqual(fixture.expected.actions);
+    expect(res.commands.map((c) => c.name)).toEqual(fixture.expected.command_names);
+    fixture.expected.lines!.forEach((expected, index) => {
+      const actual = res.render_model.lines[index];
+      if (expected.text !== undefined) expect(actual.text).toBe(expected.text);
+      if (expected.width !== undefined) expect(actual.width).toBe(expected.width);
+      if (expected.height !== undefined) expect(actual.height).toBe(expected.height);
+    });
+  });
+
+  it('large-raster-warning fixture skips preview but keeps action', () => {
+    const fixture = loadFixture('large-raster-warning');
+    const res = parseEscPos(Buffer.from(fixture.raw_base64, 'base64'));
+
+    expect(res.status).toBe(fixture.expected.status);
+    for (const warning of fixture.expected.warnings_contains ?? []) {
+      expect(res.warnings).toContain(warning);
+    }
+    expect(res.render_model.actions).toEqual(fixture.expected.actions);
+    const image = res.render_model.lines.find((line) => line.kind === 'image');
+    expect(image?.raster).toBeUndefined();
   });
 });

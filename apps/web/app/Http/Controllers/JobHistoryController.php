@@ -19,7 +19,7 @@ class JobHistoryController extends Controller
             ->limit(100)
             ->get();
 
-        if ($request->boolean('ui') === true && $request->query('ui') === 'inertia') {
+        if (strtolower((string) $request->query('ui', '')) === 'inertia') {
             return Inertia::render('Jobs/Index', [
                 'jobs' => $jobs->map(fn (PrintJob $job) => [
                     'id' => $job->id,
@@ -45,7 +45,7 @@ class JobHistoryController extends Controller
     {
         $job->load(['listener:id,name,external_id', 'rawPayload']);
 
-        if ($request->boolean('ui') === true && $request->query('ui') === 'inertia') {
+        if (strtolower((string) $request->query('ui', '')) === 'inertia') {
             return Inertia::render('Jobs/Show', [
                 'job' => [
                     'id' => $job->id,

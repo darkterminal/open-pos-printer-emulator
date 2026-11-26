@@ -1,0 +1,27 @@
+{
+  "name": "text-size-and-cut",
+  "description": "GS ! double size, normal size, partial cut and full cut",
+  "raw_base64": "G0AdIRFCSUcKHSEAbm9ybWFsCh1WAR1WAA==",
+  "expected": {
+    "status": "ok",
+    "warnings": [],
+    "actions": [
+      "initialize",
+      "partial_cut",
+      "cut"
+    ],
+    "command_names": [
+      "ESC_@",
+      "GS_!",
+      "LF",
+      "GS_!",
+      "LF",
+      "GS_V",
+      "GS_V"
+    ],
+    "lines": [
+      { "text": "BIG", "width": 2, "height": 2 },
+      { "text": "normal", "width": 1, "height": 1 }
+    ]
+  }
+}

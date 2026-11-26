@@ -32,7 +32,7 @@ class ListenerController extends Controller
             report($e);
         }
 
-        if ($request->boolean('ui') === true && $request->query('ui') === 'inertia') {
+        if (strtolower((string) $request->query('ui', '')) === 'inertia') {
             return Inertia::render('Listeners/Index', [
                 'listeners' => $listeners->map(fn (Listener $listener) => [
                     'id' => $listener->id,
