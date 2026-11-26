@@ -19,6 +19,8 @@ class JobHistoryController extends Controller
             'q' => ['nullable', 'string', 'max:200'],
             'status' => ['nullable', 'string', 'max:40'],
             'listener_id' => ['nullable', 'integer', 'exists:listeners,id'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
             'per_page' => ['nullable', 'integer', 'in:25,50,100'],
             'page' => ['nullable', 'integer', 'min:1'],
         ]);
@@ -36,6 +38,8 @@ class JobHistoryController extends Controller
             'q' => (string) ($validated['q'] ?? ''),
             'status' => (string) ($validated['status'] ?? ''),
             'listener_id' => isset($validated['listener_id']) ? (string) $validated['listener_id'] : '',
+            'date_from' => (string) ($validated['date_from'] ?? ''),
+            'date_to' => (string) ($validated['date_to'] ?? ''),
             'per_page' => (string) $perPage,
         ];
 
@@ -102,6 +106,8 @@ class JobHistoryController extends Controller
             'q' => ['nullable', 'string', 'max:200'],
             'status' => ['nullable', 'string', 'max:40'],
             'listener_id' => ['nullable', 'integer', 'exists:listeners,id'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
         ]);
 
         $afterId = max(0, (int) ($validated['after_id'] ?? 0));
@@ -129,6 +135,8 @@ class JobHistoryController extends Controller
         $q = trim((string) ($filters['q'] ?? ''));
         $status = trim((string) ($filters['status'] ?? ''));
         $listenerId = $filters['listener_id'] ?? null;
+        $dateFrom = trim((string) ($filters['date_from'] ?? ''));
+        $dateTo = trim((string) ($filters['date_to'] ?? ''));
 
         if ($q !== '') {
             $query->where(function (Builder $inner) use ($q) {
@@ -142,6 +150,12 @@ class JobHistoryController extends Controller
         }
         if ($listenerId !== null && $listenerId !== '') {
             $query->where('listener_id', (int) $listenerId);
+        }
+        if ($dateFrom !== '') {
+            $query->whereDate('received_at', '>=', $dateFrom);
+        }
+        if ($dateTo !== '') {
+            $query->whereDate('received_at', '<=', $dateTo);
         }
     }
 

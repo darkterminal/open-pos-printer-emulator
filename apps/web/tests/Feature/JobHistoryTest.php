@@ -79,4 +79,20 @@ class JobHistoryTest extends TestCase
         $this->assertCount(25, $page['props']['jobs']['data']);
         $this->assertSame(2, $page['props']['pagination']['last_page']);
     }
+
+    public function test_jobs_index_filters_by_date_range(): void
+    {
+        $user = User::factory()->create();
+        [$l1] = $this->seedJobs($user);
+        PrintJob::query()->where('external_id', 'job_alpha')->update(['received_at' => now()->subDays(3)]);
+        PrintJob::query()->where('external_id', 'job_beta')->update(['received_at' => now()]);
+
+        $res = $this->actingAs($user)->get('/jobs?date_from='.now()->toDateString().'&date_to='.now()->toDateString());
+        $res->assertOk();
+        $page = data_get($res->original->getData(), 'page');
+        $page = is_array($page) ? $page : json_decode((string) $page, true);
+        $jobs = $page['props']['jobs']['data'] ?? [];
+        $this->assertCount(1, $jobs);
+        $this->assertSame('job_beta', $jobs[0]['external_id']);
+    }
 }

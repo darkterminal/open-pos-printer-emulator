@@ -26,7 +26,7 @@ type Job = {
 };
 
 type ListenerOpt = { id: number; name: string; external_id: string };
-type Filters = { q: string; status: string; listener_id: string; per_page: string };
+type Filters = { q: string; status: string; listener_id: string; date_from: string; date_to: string; per_page: string };
 type Pagination = { current_page: number; last_page: number; per_page: number; total: number; from: number | null; to: number | null };
 type ConnectionState = 'connecting' | 'live' | 'polling';
 
@@ -63,7 +63,7 @@ export default function JobsIndex({ jobs: initialJobs, listeners = [], filters: 
   pagination?: Pagination;
 }) {
   const initialList = Array.isArray(initialJobs) ? initialJobs : (initialJobs.data ?? []);
-  const filters = initialFilters ?? { q: '', status: '', listener_id: '', per_page: '25' };
+  const filters = initialFilters ?? { q: '', status: '', listener_id: '', date_from: '', date_to: '', per_page: '25' };
   const [jobs, setJobs] = useState<Job[]>(initialList);
   const [connection, setConnection] = useState<ConnectionState>('connecting');
   const [form, setForm] = useState<Filters>(filters);
@@ -102,7 +102,14 @@ export default function JobsIndex({ jobs: initialJobs, listeners = [], filters: 
       const poll = async () => {
         try {
           const res = await window.axios.get('/jobs/feed', {
-            params: { after_id: lastIdRef.current, q: filtersRef.current.q || undefined, status: filtersRef.current.status || undefined, listener_id: filtersRef.current.listener_id || undefined },
+            params: {
+              after_id: lastIdRef.current,
+              q: filtersRef.current.q || undefined,
+              status: filtersRef.current.status || undefined,
+              listener_id: filtersRef.current.listener_id || undefined,
+              date_from: filtersRef.current.date_from || undefined,
+              date_to: filtersRef.current.date_to || undefined,
+            },
           });
           const data = Array.isArray(res.data?.data) ? (res.data.data as Job[]) : [];
           mergeJobs(data);
@@ -154,7 +161,7 @@ export default function JobsIndex({ jobs: initialJobs, listeners = [], filters: 
   };
 
   const resetFilters = () => {
-    const clean = { q: '', status: '', listener_id: '', per_page: form.per_page || '25' };
+    const clean = { q: '', status: '', listener_id: '', date_from: '', date_to: '', per_page: form.per_page || '25' };
     setForm(clean);
     router.get('/jobs', { ...clean, page: 1 }, { preserveState: true, preserveScroll: true, replace: true });
   };
@@ -178,7 +185,7 @@ export default function JobsIndex({ jobs: initialJobs, listeners = [], filters: 
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <form onSubmit={submitFilters} className="grid gap-3 md:grid-cols-5 md:items-end">
+          <form onSubmit={submitFilters} className="grid gap-3 md:grid-cols-7 md:items-end">
             <div className="space-y-1 md:col-span-2">
               <Label>Search</Label>
               <Input value={form.q} onChange={(e) => setForm({ ...form, q: e.target.value })} placeholder="external_id, correlation_id, source IP" />
@@ -205,6 +212,14 @@ export default function JobsIndex({ jobs: initialJobs, listeners = [], filters: 
                   {listeners.map((l) => <SelectItem key={l.id} value={String(l.id)}>{l.name}</SelectItem>)}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>From</Label>
+              <Input type="date" value={form.date_from} onChange={(e) => setForm({ ...form, date_from: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <Label>To</Label>
+              <Input type="date" value={form.date_to} onChange={(e) => setForm({ ...form, date_to: e.target.value })} />
             </div>
             <div className="flex gap-2">
               <Button type="submit">Filter</Button>
