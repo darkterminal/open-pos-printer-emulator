@@ -1,0 +1,23 @@
+name: Feature request
+description: Usulkan fitur atau peningkatan
+labels: ["feature"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Masalah / kebutuhan
+      description: Masalah apa yang ingin diselesaikan?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Usulan solusi
+      description: Jelaskan perilaku yang diinginkan.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope / catatan
+      description: Batasan, alternatif, atau dampak kompatibilitas.
