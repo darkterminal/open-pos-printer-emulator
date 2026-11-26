@@ -1,0 +1,25 @@
+{
+  "name": "multi-receipt-boundary",
+  "description": "Two receipts in one payload separated by ESC @ reset",
+  "raw_base64": "G0BGSVJTVAodVgAbQFNFQ09ORAodVgA=",
+  "expected": {
+    "status": "ok",
+    "warnings": [],
+    "actions": [
+      "initialize",
+      "cut"
+    ],
+    "command_names": [
+      "ESC_@",
+      "LF",
+      "GS_V",
+      "ESC_@",
+      "LF",
+      "GS_V"
+    ],
+    "lines": [
+      { "text": "FIRST" },
+      { "text": "SECOND" }
+    ]
+  }
+}

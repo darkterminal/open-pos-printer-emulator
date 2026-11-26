@@ -103,7 +103,12 @@ class ListenerController extends Controller
             report($e);
             $listener->forceFill(['status' => 'error', 'last_error' => $e->getMessage()])->save();
 
-            return back()->withErrors(['sidecar' => 'Listener created but sidecar failed to start: '.$e->getMessage()]);
+            $msg = $e->getMessage();
+            if (str_contains($msg, 'EADDRINUSE') || str_contains($msg, 'address already in use')) {
+                $msg = "Port {$listener->port} on {$listener->host} is already in use. Pilih port lain atau hentikan proses yang memakai port tersebut.";
+            }
+
+            return back()->withErrors(['sidecar' => 'Listener created but sidecar failed to start: '.$msg]);
         }
 
         return back()->with('status', "Listener {$listener->name} created.");
@@ -171,7 +176,12 @@ class ListenerController extends Controller
             report($e);
             $listener->forceFill(['status' => 'error', 'last_error' => $e->getMessage()])->save();
 
-            return back()->withErrors(['sidecar' => 'Listener updated but sidecar failed to restart: '.$e->getMessage()]);
+            $msg = $e->getMessage();
+            if (str_contains($msg, 'EADDRINUSE') || str_contains($msg, 'address already in use')) {
+                $msg = "Port {$newPort} on {$newHost} is already in use. Pilih port lain atau hentikan proses yang memakai port tersebut.";
+            }
+
+            return back()->withErrors(['sidecar' => 'Listener updated but sidecar failed to restart: '.$msg]);
         }
 
         return back()->with('status', "Listener {$listener->name} updated.");

@@ -1,0 +1,23 @@
+{
+  "name": "gs8l-graphics",
+  "description": "GS 8 L graphics data placeholder",
+  "raw_base64": "G0AdOEwUAAAAAQEBAQEBAQEBAQEBAQEBAQEBAQEKHVYA",
+  "expected": {
+    "status": "ok",
+    "warnings": [],
+    "actions": [
+      "initialize",
+      "image",
+      "cut"
+    ],
+    "command_names": [
+      "ESC_@",
+      "GS_8_L",
+      "LF",
+      "GS_V"
+    ],
+    "lines": [
+      { "kind": "image", "labelContains": "graphics 20 bytes" }
+    ]
+  }
+}

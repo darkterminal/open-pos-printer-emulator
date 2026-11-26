@@ -148,4 +148,27 @@ describe('golden ESC/POS fixtures', () => {
     expect(res.commands.map((c) => c.name)).toEqual(fixture.expected.command_names);
     expect(res.render_model.lines[0].text).toBe(fixture.expected.lines![0].text);
   });
+
+  it('gs8l-graphics fixture parses graphics placeholder', () => {
+    const fixture = loadFixture('gs8l-graphics');
+    const res = parseEscPos(Buffer.from(fixture.raw_base64, 'base64'));
+
+    expect(res.status).toBe(fixture.expected.status);
+    expect(res.warnings).toEqual(fixture.expected.warnings);
+    expect(res.render_model.actions).toEqual(fixture.expected.actions);
+    expect(res.commands.map((c) => c.name)).toEqual(fixture.expected.command_names);
+    expect(res.render_model.lines[0].kind).toBe(fixture.expected.lines![0].kind);
+    expect(res.render_model.lines[0].label ?? '').toContain(fixture.expected.lines![0].labelContains);
+  });
+
+  it('multi-receipt-boundary fixture handles ESC @ reset boundary', () => {
+    const fixture = loadFixture('multi-receipt-boundary');
+    const res = parseEscPos(Buffer.from(fixture.raw_base64, 'base64'));
+
+    expect(res.status).toBe(fixture.expected.status);
+    expect(res.warnings).toEqual(fixture.expected.warnings);
+    expect(res.render_model.actions).toEqual(fixture.expected.actions);
+    expect(res.commands.map((c) => c.name)).toEqual(fixture.expected.command_names);
+    expect(res.render_model.lines.map((l) => l.text)).toEqual(fixture.expected.lines!.map((l) => l.text));
+  });
 });
