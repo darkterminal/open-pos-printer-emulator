@@ -82,6 +82,17 @@ class InternalJobIngestTest extends TestCase
         $this->assertDatabaseCount('print_jobs', 0);
     }
 
+    public function test_rejects_missing_token(): void
+    {
+        $this->seedListener();
+        config(['services.sidecar.shared_token' => 'secret']);
+
+        $response = $this->postJson('/api/internal/v1/jobs', $this->payload());
+
+        $response->assertStatus(401)->assertJsonPath('error.code', 'UNAUTHORIZED');
+        $this->assertDatabaseCount('print_jobs', 0);
+    }
+
     public function test_ingests_job_and_is_idempotent(): void
     {
         $this->seedListener();
@@ -165,5 +176,25 @@ class InternalJobIngestTest extends TestCase
 
         $response->assertStatus(413)->assertJsonPath('error.code', 'PAYLOAD_TOO_LARGE');
         $this->assertDatabaseCount('print_jobs', 0);
+    }
+
+    public function test_stores_raw_payload_even_when_parse_error(): void
+    {
+        $this->seedListener();
+        config(['services.sidecar.shared_token' => 'secret']);
+        $payload = $this->payload('job_parse_error');
+        $payload['parse']['status'] = 'parse_error';
+        $payload['parse']['warnings'] = ['unknown_command'];
+
+        $response = $this->postJson('/api/internal/v1/jobs', $payload, [
+            'X-Sidecar-Token' => 'secret',
+        ]);
+
+        $response->assertStatus(201)->assertJsonPath('data.status', 'parse_error');
+        $this->assertDatabaseCount('print_jobs', 1);
+        $this->assertDatabaseCount('raw_payloads', 1);
+        $job = PrintJob::query()->firstOrFail();
+        $this->assertSame('parse_error', $job->status);
+        $this->assertNotNull($job->rawPayload);
     }
 }
