@@ -28,7 +28,12 @@ services:
       DB_DATABASE: ${POSTGRES_DB:-escpos}
       DB_USERNAME: ${POSTGRES_USER:-escpos}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-escpos}
-      BROADCAST_CONNECTION: log
+      BROADCAST_CONNECTION: reverb
+      REVERB_SERVER_HOST: 0.0.0.0
+      REVERB_SERVER_PORT: 8080
+      REVERB_HOST: localhost
+      REVERB_PORT: 8081
+      REVERB_SCHEME: http
       SIDECAR_INTERNAL_URL: http://sidecar:3001
       SIDECAR_SHARED_TOKEN: ${SIDECAR_SHARED_TOKEN:-dev-sidecar-token}
     volumes:
@@ -40,6 +45,30 @@ services:
       db:
         condition: service_healthy
     command: ["sh", "-lc", "php artisan serve --host=0.0.0.0 --port=8080"]
+
+  reverb:
+    image: escpos-emulator-web:dev
+    env_file:
+      - ./apps/web/.env
+    environment:
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: ${POSTGRES_DB:-escpos}
+      DB_USERNAME: ${POSTGRES_USER:-escpos}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-escpos}
+      BROADCAST_CONNECTION: reverb
+      REVERB_SERVER_HOST: 0.0.0.0
+      REVERB_SERVER_PORT: 8080
+    volumes:
+      - ./apps/web:/var/www/html
+      - web_vendor:/var/www/html/vendor
+    ports:
+      - "8081:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["sh", "-lc", "php artisan reverb:start --host=0.0.0.0 --port=8080"]
 
   sidecar:
     image: escpos-emulator-sidecar:dev

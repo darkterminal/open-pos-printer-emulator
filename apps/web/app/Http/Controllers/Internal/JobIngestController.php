@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Internal;
 
+use App\Events\JobIngested;
 use App\Http\Controllers\Controller;
 use App\Models\Listener;
 use App\Models\PrintJob;
@@ -136,6 +137,12 @@ class JobIngestController extends Controller
 
             return $job;
         });
+
+        try {
+            event(new JobIngested($job));
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return response()->json([
             'data' => [
