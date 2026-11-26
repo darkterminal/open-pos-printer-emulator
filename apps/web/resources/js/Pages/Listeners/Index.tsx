@@ -158,7 +158,12 @@ export default function ListenersIndex({ listeners, profiles = [] }: { listeners
       </div>
 
       <div className="panel">
-        <h1 style={{ marginTop: 0 }}>Listeners</h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
+          <h1 style={{ margin: 0 }}>Listeners</h1>
+          <button className="btn btn-secondary" type="button" onClick={() => router.post('/listeners/sync', {}, { preserveScroll: true })}>
+            Sync from sidecar
+          </button>
+        </div>
         <table>
           <thead>
             <tr>

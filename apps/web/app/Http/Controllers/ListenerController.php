@@ -177,6 +177,30 @@ class ListenerController extends Controller
         return back()->with('status', "Listener {$listener->name} updated.");
     }
 
+    public function sync(SidecarClient $sidecar): RedirectResponse
+    {
+        $listeners = Listener::query()->get();
+        $ok = 0;
+
+        foreach ($listeners as $listener) {
+            try {
+                $info = $sidecar->ensureListener($listener->external_id, $listener->host, (int) $listener->port);
+                $listener->forceFill([
+                    'status' => $info['status'] ?? $listener->status,
+                    'last_error' => $info['last_error'] ?? null,
+                    'fault_config_json' => $info['fault_config'] ?? $listener->fault_config_json,
+                    'last_heartbeat_at' => now(),
+                ])->save();
+                $ok++;
+            } catch (\Throwable $e) {
+                report($e);
+                $listener->forceFill(['status' => 'error', 'last_error' => $e->getMessage()])->save();
+            }
+        }
+
+        return back()->with('status', "Synced {$ok}/{$listeners->count()} listeners from sidecar.");
+    }
+
     public function updateFaults(Request $request, Listener $listener, SidecarClient $sidecar): RedirectResponse
     {
         $validated = $request->validate([

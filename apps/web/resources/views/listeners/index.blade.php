@@ -15,6 +15,10 @@
         <h1 style="margin:6px 0 0;">Listeners</h1>
         <p class="muted" style="margin:6px 0 0;">Manage TCP listener status and fault simulation.</p>
     </div>
+    <form method="POST" action="{{ route('listeners.sync') }}">
+        @csrf
+        <button class="btn btn-secondary" type="submit">Sync from sidecar</button>
+    </form>
 </div>
 
 <div class="panel" style="margin-bottom:16px;">

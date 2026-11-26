@@ -103,4 +103,27 @@ class ListenerManagementTest extends TestCase
                 && $request['faults']['paper_out'] === true;
         });
     }
+
+    public function test_manual_sync_calls_sidecar_ensure(): void
+    {
+        $listener = $this->seedListener();
+        $user = $listener->user;
+
+        Http::fake([
+            'http://sidecar:3001/control/v1/listeners' => Http::response([
+                'data' => [
+                    'external_id' => 'lst_default_9100',
+                    'status' => 'listening',
+                    'fault_config' => [],
+                    'last_error' => null,
+                ],
+            ], 200),
+        ]);
+
+        $response = $this->actingAs($user)->post(route('listeners.sync'));
+        $response->assertRedirect();
+        $response->assertSessionHas('status');
+
+        Http::assertSent(fn ($req) => $req->url() === 'http://sidecar:3001/control/v1/listeners' && $req['listener_external_id'] === 'lst_default_9100');
+    }
 }

@@ -24,4 +24,5 @@ Route::middleware('auth')->group(function (): void {
     Route::patch('/listeners/{listener}', [ListenerController::class, 'update'])->name('listeners.update');
     Route::delete('/listeners/{listener}', [ListenerController::class, 'destroy'])->name('listeners.destroy');
     Route::patch('/listeners/{listener}/faults', [ListenerController::class, 'updateFaults'])->name('listeners.faults.update');
+    Route::post('/listeners/sync', [ListenerController::class, 'sync'])->name('listeners.sync');
 });
