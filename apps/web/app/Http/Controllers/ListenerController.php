@@ -35,19 +35,23 @@ class ListenerController extends Controller
             report($e);
         }
 
+        $profiles = PrinterProfile::query()->orderBy('name')->get(['id', 'name']);
+
         if (strtolower((string) $request->query('ui', '')) === 'inertia') {
             return Inertia::render('Listeners/Index', [
+                'profiles' => $profiles,
                 'listeners' => $listeners->map(fn (Listener $listener) => [
                     'id' => $listener->id,
                     'external_id' => $listener->external_id,
                     'name' => $listener->name,
                     'host' => $listener->host,
                     'port' => $listener->port,
+                    'printer_profile_id' => $listener->printer_profile_id,
                     'status' => $listener->status,
                     'last_error' => $listener->last_error,
                     'last_heartbeat_at' => optional($listener->last_heartbeat_at)->toIso8601String(),
                     'print_jobs_count' => $listener->print_jobs_count,
-                    'printer_profile' => $listener->printerProfile?->only(['name']),
+                    'printer_profile' => $listener->printerProfile?->only(['id', 'name']),
                     'sidecar' => $sidecarById[$listener->external_id] ?? null,
                     'fault_config' => $sidecarById[$listener->external_id]['fault_config'] ?? ($listener->fault_config_json ?? []),
                 ])->values(),
@@ -57,7 +61,7 @@ class ListenerController extends Controller
         return view('listeners.index', [
             'listeners' => $listeners,
             'sidecarById' => $sidecarById,
-            'profiles' => PrinterProfile::query()->orderBy('name')->get(['id', 'name']),
+            'profiles' => $profiles,
         ]);
     }
 
@@ -118,6 +122,59 @@ class ListenerController extends Controller
         $listener->delete();
 
         return back()->with('status', "Listener {$name} removed.");
+    }
+
+    public function update(Request $request, Listener $listener, SidecarClient $sidecar): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'host' => ['required', 'string', 'max:255'],
+            'port' => [
+                'required',
+                'integer',
+                'between:1,65535',
+                Rule::unique('listeners', 'port')
+                    ->where(fn ($q) => $q->where('host', $request->input('host')))
+                    ->ignore($listener->id),
+            ],
+            'printer_profile_id' => ['nullable', 'integer', 'exists:printer_profiles,id'],
+        ]);
+
+        $oldHost = $listener->host;
+        $oldPort = (int) $listener->port;
+        $newHost = $validated['host'];
+        $newPort = (int) $validated['port'];
+
+        $listener->fill([
+            'name' => $validated['name'],
+            'host' => $newHost,
+            'port' => $newPort,
+            'printer_profile_id' => $validated['printer_profile_id'] ?? null,
+        ])->save();
+
+        $needsRestart = $oldHost !== $newHost || $oldPort !== $newPort;
+        try {
+            if ($needsRestart) {
+                // ensureListener will stop existing and restart on new bind.
+                $info = $sidecar->ensureListener($listener->external_id, $newHost, $newPort);
+            } else {
+                $info = null;
+            }
+
+            $listener->forceFill([
+                'status' => $info['status'] ?? $listener->status,
+                'last_error' => $info['last_error'] ?? null,
+                'fault_config_json' => $info['fault_config'] ?? $listener->fault_config_json,
+                'last_heartbeat_at' => $needsRestart ? now() : $listener->last_heartbeat_at,
+            ])->save();
+        } catch (\Throwable $e) {
+            report($e);
+            $listener->forceFill(['status' => 'error', 'last_error' => $e->getMessage()])->save();
+
+            return back()->withErrors(['sidecar' => 'Listener updated but sidecar failed to restart: '.$e->getMessage()]);
+        }
+
+        return back()->with('status', "Listener {$listener->name} updated.");
     }
 
     public function updateFaults(Request $request, Listener $listener, SidecarClient $sidecar): RedirectResponse

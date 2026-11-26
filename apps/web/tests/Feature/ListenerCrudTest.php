@@ -60,6 +60,43 @@ class ListenerCrudTest extends TestCase
         Http::assertSent(fn ($req) => $req->url() === 'http://sidecar:3001/control/v1/listeners' && $req['port'] === 9102);
     }
 
+    public function test_user_can_update_listener_and_sidecar_is_restarted_on_port_change(): void
+    {
+        [$user, $profile] = $this->seedUserAndProfile();
+        $listener = Listener::query()->create([
+            'external_id' => 'lst_upd_9104',
+            'user_id' => $user->id,
+            'name' => 'Old Name',
+            'host' => '0.0.0.0',
+            'port' => 9104,
+            'printer_profile_id' => $profile->id,
+            'status' => 'listening',
+            'fault_config_json' => ['paper_out' => false, 'cover_open' => false, 'cutter_error' => false, 'offline' => false],
+        ]);
+
+        Http::fake([
+            'http://sidecar:3001/control/v1/listeners' => Http::response([
+                'data' => [
+                    'external_id' => 'lst_upd_9104',
+                    'status' => 'listening',
+                    'fault_config' => ['paper_out' => false, 'cover_open' => false, 'cutter_error' => false, 'offline' => false],
+                    'last_error' => null,
+                ],
+            ], 200),
+        ]);
+
+        $response = $this->actingAs($user)->patch(route('listeners.update', $listener), [
+            'name' => 'New Name',
+            'host' => '0.0.0.0',
+            'port' => 9105,
+            'printer_profile_id' => $profile->id,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('listeners', ['id' => $listener->id, 'name' => 'New Name', 'port' => 9105]);
+        Http::assertSent(fn ($req) => $req->method() === 'POST' && $req->url() === 'http://sidecar:3001/control/v1/listeners' && $req['port'] === 9105);
+    }
+
     public function test_user_can_delete_listener_and_sidecar_stop_called(): void
     {
         [$user, $profile] = $this->seedUserAndProfile();

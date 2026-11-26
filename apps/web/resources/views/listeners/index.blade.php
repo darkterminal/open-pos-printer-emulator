@@ -111,6 +111,23 @@
                     </form>
                 </td>
                 <td>
+                    <details>
+                        <summary class="muted" style="cursor:pointer; margin-bottom:8px;">Edit</summary>
+                        <form method="POST" action="{{ route('listeners.update', $listener) }}" style="display:grid; gap:8px; margin-bottom:8px;">
+                            @csrf
+                            @method('PATCH')
+                            <input name="name" value="{{ old('name', $listener->name) }}" required placeholder="Name">
+                            <input name="host" value="{{ old('host', $listener->host) }}" required placeholder="Host">
+                            <input name="port" type="number" min="1" max="65535" value="{{ old('port', $listener->port) }}" required placeholder="Port">
+                            <select name="printer_profile_id">
+                                <option value="">(none)</option>
+                                @foreach ($profiles ?? [] as $profile)
+                                    <option value="{{ $profile->id }}" @selected((string) old('printer_profile_id', $listener->printer_profile_id) === (string) $profile->id)>{{ $profile->name }}</option>
+                                @endforeach
+                            </select>
+                            <button class="btn btn-secondary" type="submit">Save</button>
+                        </form>
+                    </details>
                     <form method="POST" action="{{ route('listeners.destroy', $listener) }}" onsubmit="return confirm('Remove listener {{ $listener->name }}?');">
                         @csrf
                         @method('DELETE')

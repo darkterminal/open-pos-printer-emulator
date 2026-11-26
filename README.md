@@ -71,9 +71,9 @@ Buka `/jobs` atau `/jobs?ui=inertia` untuk melihat job.
 - Ingest internal Laravel: token auth, payload validation, idempotent `external_id`, raw payload persisted on parse error.
 - Realtime `/jobs` via Reverb/Echo + polling fallback `/jobs/feed`.
 - Job detail `/jobs/{id}`: receipt preview, command inspector, warnings, raw base64. Raster image preview rendered as monochrome canvas.
-- Listener management `/listeners`: sidecar status, heartbeat, last error, fault simulation toggles (paper_out, cover_open, cutter_error, offline).
-- Sidecar control endpoints: ensure/start listener, stop, update faults. Laravel internal listener status ingest endpoint.
-- Listener sync command: `php artisan sidecar:sync-listeners` (also run on web startup and scheduled every minute).
+- Listener management `/listeners`: create/edit/delete listener, sidecar status, heartbeat, last error, fault simulation toggles (paper_out, cover_open, cutter_error, offline).
+- Sidecar control endpoints: ensure/start listener, stop, update faults. Laravel internal listener status ingest + bootstrap endpoints.
+- Listener sync command: `php artisan sidecar:sync-listeners` (also run on web startup and scheduled every minute). Sidecar bootstraps listeners from Laravel and stops orphan listeners not in DB.
 - Inertia skeleton pages: `/jobs?ui=inertia`, `/jobs/{id}?ui=inertia`, `/listeners?ui=inertia`.
 
 ## Testing & Checks

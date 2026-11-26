@@ -105,14 +105,30 @@ export class ListenerRegistry {
   async bootstrapFromLaravel(fetcher: () => Promise<Array<{ external_id: string; host: string; port: number; fault_config?: Partial<FaultConfig> }>>): Promise<void> {
     try {
       const listeners = await fetcher();
+      const seen = new Set<string>();
+
       for (const item of listeners) {
         if (!item?.external_id || !item.host || !Number.isInteger(item.port)) continue;
+        seen.add(item.external_id);
         try {
           const info = await this.ensureListener(item.external_id, item.host, item.port);
           if (item.fault_config) this.setFaults(item.external_id, item.fault_config);
           logger.info({ external_id: info.external_id, port: info.port }, 'listener bootstrapped from laravel');
         } catch (err) {
           logger.warn({ err, external_id: item.external_id }, 'failed to bootstrap listener');
+        }
+      }
+
+      // Stop orphan listeners not present in DB bootstrap, but keep default config listener.
+      for (const [externalId, entry] of this.listeners.entries()) {
+        if (externalId === config.listenerExternalId) continue;
+        if (seen.has(externalId)) continue;
+        try {
+          await this.stopListener(externalId);
+          this.listeners.delete(externalId);
+          logger.info({ external_id: externalId }, 'stopped orphan listener not in bootstrap config');
+        } catch (err) {
+          logger.warn({ err, external_id: externalId }, 'failed to stop orphan listener');
         }
       }
     } catch (err) {
