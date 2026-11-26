@@ -349,7 +349,7 @@ export function parseEscPos(buffer: Buffer, widthDots = 576): ParseResult {
           if (tabStops.length > 32) { warnings.push('esc_D_too_many_tabs'); break; }
         }
         if (j >= buffer.length) { warnings.push('truncated_esc_D'); break; }
-        pushCommand(offset, buffer.subarray(i, j + 1), 'ESC_D', { tab_stops: tabStops });
+        pushCommand(offset, Array.from(buffer.subarray(i, j + 1)), 'ESC_D', { tab_stops: tabStops });
         i = j;
         continue;
       }
