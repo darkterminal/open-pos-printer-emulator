@@ -1,0 +1,23 @@
+{
+  "name": "code128-barcode",
+  "description": "GS k m n length-prefixed CODE128 barcode",
+  "raw_base64": "G0Ada0kHQUJDLTEyMwodVgA=",
+  "expected": {
+    "status": "ok",
+    "warnings": [],
+    "actions": [
+      "initialize",
+      "barcode",
+      "cut"
+    ],
+    "command_names": [
+      "ESC_@",
+      "GS_k",
+      "LF",
+      "GS_V"
+    ],
+    "lines": [
+      { "kind": "barcode", "labelContains": "CODE128 ABC-123" }
+    ]
+  }
+}
