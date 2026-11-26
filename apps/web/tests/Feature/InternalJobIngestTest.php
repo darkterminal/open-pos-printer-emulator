@@ -104,4 +104,66 @@ class InternalJobIngestTest extends TestCase
         $this->assertSame('partial', $job->status);
         $this->assertSame(1, $job->warnings_count);
     }
+
+    public function test_rejects_unknown_listener(): void
+    {
+        config(['services.sidecar.shared_token' => 'secret']);
+        $payload = $this->payload('job_unknown_listener');
+        $payload['listener_external_id'] = 'lst_missing';
+
+        $response = $this->postJson('/api/internal/v1/jobs', $payload, [
+            'X-Sidecar-Token' => 'secret',
+        ]);
+
+        $response->assertStatus(404)->assertJsonPath('error.code', 'LISTENER_NOT_FOUND');
+        $this->assertDatabaseCount('print_jobs', 0);
+    }
+
+    public function test_rejects_invalid_payload(): void
+    {
+        $this->seedListener();
+        config(['services.sidecar.shared_token' => 'secret']);
+        $payload = $this->payload('job_invalid');
+        unset($payload['raw']['data']);
+
+        $response = $this->postJson('/api/internal/v1/jobs', $payload, [
+            'X-Sidecar-Token' => 'secret',
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertDatabaseCount('print_jobs', 0);
+    }
+
+    public function test_rejects_sha_mismatch(): void
+    {
+        $this->seedListener();
+        config(['services.sidecar.shared_token' => 'secret']);
+        $payload = $this->payload('job_sha_mismatch');
+        $payload['raw']['sha256'] = str_repeat('a', 64);
+
+        $response = $this->postJson('/api/internal/v1/jobs', $payload, [
+            'X-Sidecar-Token' => 'secret',
+        ]);
+
+        $response->assertStatus(422)->assertJsonPath('error.message', 'Raw payload sha256 mismatch');
+        $this->assertDatabaseCount('print_jobs', 0);
+    }
+
+    public function test_rejects_oversized_payload(): void
+    {
+        $this->seedListener();
+        config([
+            'services.sidecar.shared_token' => 'secret',
+            'services.sidecar.max_payload_bytes' => 4,
+        ]);
+        $payload = $this->payload('job_too_large');
+        $payload['connection']['bytes_received'] = 4;
+
+        $response = $this->postJson('/api/internal/v1/jobs', $payload, [
+            'X-Sidecar-Token' => 'secret',
+        ]);
+
+        $response->assertStatus(413)->assertJsonPath('error.code', 'PAYLOAD_TOO_LARGE');
+        $this->assertDatabaseCount('print_jobs', 0);
+    }
 }

@@ -27,6 +27,7 @@ class JobIngestController extends Controller
             ], 401);
         }
 
+        $maxBytes = (int) config('services.sidecar.max_payload_bytes', 1048576);
         $validated = $request->validate([
             'schema_version' => ['required', 'string', Rule::in(['1.0'])],
             'correlation_id' => ['required', 'string', 'max:64'],
@@ -35,9 +36,9 @@ class JobIngestController extends Controller
             'received_at' => ['required', 'date'],
             'completed_at' => ['required', 'date'],
             'source.ip' => ['required', 'string', 'max:45'],
-            'source.port' => ['nullable', 'integer'],
+            'source.port' => ['nullable', 'integer', 'between:0,65535'],
             'connection.status' => ['required', 'string', 'max:64'],
-            'connection.bytes_received' => ['required', 'integer', 'min:0'],
+            'connection.bytes_received' => ['required', 'integer', 'min:0', 'max:'.$maxBytes],
             'raw.encoding' => ['required', 'string', Rule::in(['base64'])],
             'raw.data' => ['present', 'string'],
             'raw.sha256' => ['required', 'string', 'size:64'],
@@ -47,6 +48,35 @@ class JobIngestController extends Controller
             'parse.commands' => ['present', 'array'],
             'parse.render_model' => ['nullable', 'array'],
         ]);
+
+        $decoded = base64_decode($validated['raw']['data'], true);
+        if ($decoded === false) {
+            return response()->json([
+                'error' => [
+                    'code' => 'VALIDATION_ERROR',
+                    'message' => 'Invalid base64 raw payload',
+                ],
+            ], 422);
+        }
+
+        $actualSha = hash('sha256', $decoded);
+        if (! hash_equals($validated['raw']['sha256'], $actualSha)) {
+            return response()->json([
+                'error' => [
+                    'code' => 'VALIDATION_ERROR',
+                    'message' => 'Raw payload sha256 mismatch',
+                ],
+            ], 422);
+        }
+
+        if (strlen($decoded) > $maxBytes) {
+            return response()->json([
+                'error' => [
+                    'code' => 'PAYLOAD_TOO_LARGE',
+                    'message' => 'Raw payload exceeds configured limit',
+                ],
+            ], 413);
+        }
 
         $existing = PrintJob::query()->where('external_id', $validated['external_id'])->first();
         if ($existing) {

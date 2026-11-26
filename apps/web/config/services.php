@@ -38,6 +38,7 @@ return [
     'sidecar' => [
         'shared_token' => env('SIDECAR_SHARED_TOKEN'),
         'internal_url' => env('SIDECAR_INTERNAL_URL', 'http://sidecar:3001'),
+        'max_payload_bytes' => (int) env('SIDECAR_MAX_PAYLOAD_BYTES', 1048576),
     ],
 
 ];
