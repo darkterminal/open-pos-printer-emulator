@@ -47,16 +47,17 @@ function ProfileForm({ profile, onDone }: { profile?: PrinterProfile; onDone?: (
     }
   };
 
+  const prefix = profile ? `profile-${profile.id}` : 'profile-new';
   return (
     <form onSubmit={submit} className="grid gap-4 md:grid-cols-4 md:items-end">
-      <div className="space-y-2 md:col-span-2"><Label>Name</Label><Input value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} required /></div>
-      <div className="space-y-2"><Label>Printer model</Label><Input value={form.data.printer_model} onChange={(e) => form.setData('printer_model', e.target.value)} placeholder="generic-escpos" /></div>
-      <div className="space-y-2"><Label>Paper (mm)</Label><Input type="number" value={form.data.paper_width_mm} onChange={(e) => form.setData('paper_width_mm', e.target.value)} required /></div>
-      <div className="space-y-2"><Label>DPI</Label><Input type="number" value={form.data.dpi} onChange={(e) => form.setData('dpi', e.target.value)} required /></div>
-      <div className="space-y-2"><Label>Chars/line</Label><Input type="number" value={form.data.chars_per_line} onChange={(e) => form.setData('chars_per_line', e.target.value)} required /></div>
-      <div className="space-y-2"><Label>Code page</Label><Input value={form.data.code_page} onChange={(e) => form.setData('code_page', e.target.value)} required /></div>
-      <div className="space-y-2"><Label>Max image dots</Label><Input type="number" value={form.data.image_max_width_dots} onChange={(e) => form.setData('image_max_width_dots', e.target.value)} required /></div>
-      <div className="space-y-2 md:col-span-2"><Label>Max image bytes</Label><Input type="number" value={form.data.image_max_bytes} onChange={(e) => form.setData('image_max_bytes', e.target.value)} required /></div>
+      <div className="space-y-2 md:col-span-2"><Label htmlFor={`${prefix}-name`}>Name</Label><Input id={`${prefix}-name`} value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} required /></div>
+      <div className="space-y-2"><Label htmlFor={`${prefix}-model`}>Printer model</Label><Input id={`${prefix}-model`} value={form.data.printer_model} onChange={(e) => form.setData('printer_model', e.target.value)} placeholder="generic-escpos" /></div>
+      <div className="space-y-2"><Label htmlFor={`${prefix}-paper`}>Paper (mm)</Label><Input id={`${prefix}-paper`} type="number" value={form.data.paper_width_mm} onChange={(e) => form.setData('paper_width_mm', e.target.value)} required /></div>
+      <div className="space-y-2"><Label htmlFor={`${prefix}-dpi`}>DPI</Label><Input id={`${prefix}-dpi`} type="number" value={form.data.dpi} onChange={(e) => form.setData('dpi', e.target.value)} required /></div>
+      <div className="space-y-2"><Label htmlFor={`${prefix}-chars`}>Chars/line</Label><Input id={`${prefix}-chars`} type="number" value={form.data.chars_per_line} onChange={(e) => form.setData('chars_per_line', e.target.value)} required /></div>
+      <div className="space-y-2"><Label htmlFor={`${prefix}-codepage`}>Code page</Label><Input id={`${prefix}-codepage`} value={form.data.code_page} onChange={(e) => form.setData('code_page', e.target.value)} required /></div>
+      <div className="space-y-2"><Label htmlFor={`${prefix}-imgdots`}>Max image dots</Label><Input id={`${prefix}-imgdots`} type="number" value={form.data.image_max_width_dots} onChange={(e) => form.setData('image_max_width_dots', e.target.value)} required /></div>
+      <div className="space-y-2 md:col-span-2"><Label htmlFor={`${prefix}-imgbytes`}>Max image bytes</Label><Input id={`${prefix}-imgbytes`} type="number" value={form.data.image_max_bytes} onChange={(e) => form.setData('image_max_bytes', e.target.value)} required /></div>
       <Button type="submit" disabled={form.processing}>{form.processing ? 'Saving...' : profile ? 'Save' : 'Create profile'}</Button>
     </form>
   );

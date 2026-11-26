@@ -1,4 +1,4 @@
-.PHONY: help up down build logs ps restart test lint fmt sidecar-test web-test web-lint sidecar-lint shell-web shell-sidecar
+.PHONY: help up down build logs ps restart test lint fmt e2e sidecar-test web-test web-lint sidecar-lint shell-web shell-sidecar
 
 help:
 	@echo "Targets: up down build logs ps restart test lint fmt shell-web shell-sidecar"
@@ -47,3 +47,7 @@ lint: web-lint sidecar-lint
 fmt:
 	kiri compose exec web ./vendor/bin/pint
 	kiri compose exec sidecar npm run format
+
+e2e:
+	cd apps/web && E2E_BASE_URL=http://localhost:8080 npx playwright test
+File not found: 

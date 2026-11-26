@@ -41,4 +41,8 @@ return [
         'max_payload_bytes' => (int) env('SIDECAR_MAX_PAYLOAD_BYTES', 1048576),
     ],
 
+    'print_jobs' => [
+        'retention_days' => (int) env('PRINT_JOBS_RETENTION_DAYS', 30),
+    ],
+
 ];

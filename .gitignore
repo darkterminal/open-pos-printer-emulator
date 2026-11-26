@@ -44,6 +44,7 @@ coverage/
 .playwright-mcp/
 test-results/
 playwright-report/
+blob-report/
 
 # Kiri / Docker local overrides
 compose.override.yaml

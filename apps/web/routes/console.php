@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command(SyncSidecarListeners::class)->everyMinute()->withoutOverlapping();
+Schedule::command('jobs:prune')->dailyAt('03:30')->withoutOverlapping();

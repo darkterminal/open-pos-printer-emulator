@@ -27,6 +27,8 @@
                 @endforeach
             </select>
         </label>
+        <label>From<input type="date" name="date_from" value="{{ $filters['date_from'] ?? '' }}"></label>
+        <label>To<input type="date" name="date_to" value="{{ $filters['date_to'] ?? '' }}"></label>
         <button class="btn" type="submit">Filter</button>
         <a class="btn btn-secondary" href="{{ route('jobs.index', ['ui' => 'blade']) }}">Reset</a>
     </form>
