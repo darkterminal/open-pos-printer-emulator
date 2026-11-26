@@ -1,0 +1,81 @@
+name: E2E
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Prepare env files
+        run: |
+          cp apps/web/.env.example apps/web/.env
+          cp apps/sidecar/.env.example apps/sidecar/.env
+
+      - name: Start stack
+        run: docker compose -f compose.yaml -f compose.ci.yaml up -d --build
+
+      - name: Wait for services
+        run: |
+          for i in {1..60}; do
+            curl -fsS http://localhost:8080/login >/dev/null && break
+            sleep 2
+          done
+          curl -fsS http://localhost:8080/login >/dev/null
+
+      - name: Setup Laravel
+        run: |
+          docker compose -f compose.yaml -f compose.ci.yaml exec -T web php artisan key:generate --force
+          docker compose -f compose.yaml -f compose.ci.yaml exec -T web php artisan migrate --force
+          docker compose -f compose.yaml -f compose.ci.yaml exec -T web php artisan db:seed --force
+          docker compose -f compose.yaml -f compose.ci.yaml exec -T web npm ci
+          docker compose -f compose.yaml -f compose.ci.yaml exec -T web npm run build
+
+      - name: Install Playwright
+        working-directory: apps/web
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Run E2E smoke
+        working-directory: apps/web
+        env:
+          E2E_BASE_URL: http://localhost:8080
+        run: npx playwright test
+
+      - name: Upload Playwright artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: |
+            apps/web/test-results/
+            apps/web/playwright-report/
+
+      - name: Dump logs on failure
+        if: failure()
+        run: docker compose -f compose.yaml -f compose.ci.yaml logs --no-color > compose-e2e.log
+
+      - name: Upload compose logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compose-e2e-logs
+          path: compose-e2e.log
+
+      - name: Shutdown
+        if: always()
+        run: docker compose -f compose.yaml -f compose.ci.yaml down -v

@@ -1,0 +1,78 @@
+services:
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: ../../docker/web/Dockerfile
+    env_file: []
+    environment:
+      APP_ENV: testing
+      APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8080
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: escpos
+      DB_USERNAME: escpos
+      DB_PASSWORD: escpos
+      BROADCAST_CONNECTION: reverb
+      REVERB_APP_ID: local
+      REVERB_APP_KEY: local-key
+      REVERB_APP_SECRET: local-secret
+      REVERB_SERVER_HOST: 0.0.0.0
+      REVERB_SERVER_PORT: 8080
+      REVERB_HOST: localhost
+      REVERB_PORT: 8081
+      REVERB_SCHEME: http
+      VITE_REVERB_APP_KEY: local-key
+      VITE_REVERB_HOST: localhost
+      VITE_REVERB_PORT: 8081
+      VITE_REVERB_SCHEME: http
+      SIDECAR_INTERNAL_URL: http://sidecar:3001
+      SIDECAR_SHARED_TOKEN: ci-sidecar-token
+      LARAVEL_CONTROL_TOKEN: ci-laravel-token
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+    command: ["sh", "-lc", "php artisan serve --host=0.0.0.0 --port=8080"]
+
+  reverb:
+    build:
+      context: ./apps/web
+      dockerfile: ../../docker/web/Dockerfile
+    env_file: []
+    environment:
+      APP_ENV: testing
+      APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: escpos
+      DB_USERNAME: escpos
+      DB_PASSWORD: escpos
+      BROADCAST_CONNECTION: reverb
+      REVERB_APP_ID: local
+      REVERB_APP_KEY: local-key
+      REVERB_APP_SECRET: local-secret
+      REVERB_SERVER_HOST: 0.0.0.0
+      REVERB_SERVER_PORT: 8080
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+
+  sidecar:
+    build:
+      context: ./apps/sidecar
+      dockerfile: ../../docker/sidecar/Dockerfile
+    env_file: []
+    environment:
+      NODE_ENV: test
+      PORT: 3001
+      TCP_HOST: 0.0.0.0
+      TCP_PORT: 9100
+      LARAVEL_INTERNAL_URL: http://web:8080/api/internal/v1
+      SIDECAR_SHARED_TOKEN: ci-sidecar-token
+      LOG_LEVEL: info
+      JOB_IDLE_TIMEOUT_MS: 800
+      MAX_PAYLOAD_BYTES: 1048576
+    command: ["sh", "-lc", "npm ci && npm run dev"]
