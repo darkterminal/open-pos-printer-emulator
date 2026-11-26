@@ -1,0 +1,57 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Environment
+.env
+.env.*
+!.env.example
+apps/**/.env
+apps/**/.env.*
+!apps/**/.env.example
+
+# PHP / Laravel
+apps/web/vendor/
+apps/web/node_modules/
+apps/web/public/build/
+apps/web/public/hot
+apps/web/storage/*.key
+apps/web/storage/framework/cache/*
+!apps/web/storage/framework/cache/.gitkeep
+apps/web/storage/framework/sessions/*
+!apps/web/storage/framework/sessions/.gitkeep
+apps/web/storage/framework/views/*
+!apps/web/storage/framework/views/.gitkeep
+apps/web/storage/logs/*
+!apps/web/storage/logs/.gitkeep
+apps/web/bootstrap/cache/*
+!apps/web/bootstrap/cache/.gitkeep
+apps/web/.phpunit.result.cache
+
+# Node / sidecar
+apps/sidecar/node_modules/
+apps/sidecar/dist/
+apps/sidecar/coverage/
+
+# Frontend / tooling
+node_modules/
+dist/
+coverage/
+.playwright/
+.playwright-mcp/
+test-results/
+playwright-report/
+
+# Kiri / Docker local overrides
+compose.override.yaml
+docker-compose.override.yml
+
+# Internal planning docs
+.internal/
+
+# Misc
+*.log
+/tmp/
