@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AppShell } from '@/components/app-shell';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,6 +20,8 @@ type Job = {
   received_at?: string | null;
 };
 
+type ConnectionState = 'connecting' | 'live' | 'polling';
+
 function jobStatus(status: string, warnings: number) {
   return (
     <div className="flex items-center gap-2">
@@ -29,10 +31,95 @@ function jobStatus(status: string, warnings: number) {
   );
 }
 
-export default function JobsIndex({ jobs }: { jobs: Job[] }) {
+function ConnectionBadge({ state }: { state: ConnectionState }) {
+  if (state === 'live') return <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/15">live</Badge>;
+  if (state === 'polling') return <Badge className="bg-amber-500/15 text-amber-400 border-amber-500/20 hover:bg-amber-500/15">polling fallback</Badge>;
+  return <Badge variant="secondary">connecting</Badge>;
+}
+
+export default function JobsIndex({ jobs: initialJobs }: { jobs: Job[] }) {
+  const [jobs, setJobs] = useState<Job[]>(initialJobs);
+  const [connection, setConnection] = useState<ConnectionState>('connecting');
+  const lastIdRef = useRef<number>(initialJobs[0]?.id ?? 0);
+
   useEffect(() => {
-    const timer = setInterval(() => router.reload({ only: ['jobs'] }), 5000);
-    return () => clearInterval(timer);
+    setJobs(initialJobs);
+    lastIdRef.current = Math.max(lastIdRef.current, initialJobs[0]?.id ?? 0);
+  }, [initialJobs]);
+
+  useEffect(() => {
+    let polling: ReturnType<typeof setInterval> | null = null;
+    let cancelled = false;
+
+    const mergeJobs = (incoming: Job[]) => {
+      if (cancelled || incoming.length === 0) return;
+      setJobs((prev) => {
+        const seen = new Set(prev.map((j) => j.id));
+        const fresh = incoming.filter((j) => !seen.has(j.id));
+        if (fresh.length === 0) return prev;
+        const merged = [...fresh, ...prev].sort((a, b) => b.id - a.id).slice(0, 100);
+        lastIdRef.current = Math.max(lastIdRef.current, merged[0]?.id ?? 0);
+        return merged;
+      });
+    };
+
+    const startPolling = () => {
+      setConnection('polling');
+      if (polling) return;
+      const poll = async () => {
+        try {
+          const res = await window.axios.get('/jobs/feed', { params: { after_id: lastIdRef.current } });
+          const data = Array.isArray(res.data?.data) ? (res.data.data as Job[]) : [];
+          mergeJobs(data);
+        } catch {
+          // keep polling fallback silent; next interval retries
+        }
+      };
+      void poll();
+      polling = setInterval(poll, 5000);
+    };
+
+    const echo = (window as unknown as { Echo?: any }).Echo;
+    if (!echo) {
+      startPolling();
+      return () => { cancelled = true; if (polling) clearInterval(polling); };
+    }
+
+    try {
+      const channel = echo.channel('jobs');
+      channel.listen('.job.ingested', (payload: Job) => {
+        mergeJobs([payload]);
+      });
+
+      const pusher = echo.connector?.pusher;
+      if (pusher?.connection) {
+        const onConnected = () => setConnection('live');
+        const onUnavailable = () => startPolling();
+        pusher.connection.bind('connected', onConnected);
+        pusher.connection.bind('unavailable', onUnavailable);
+        pusher.connection.bind('failed', onUnavailable);
+        pusher.connection.bind('disconnected', onUnavailable);
+        if (pusher.connection.state === 'connected') setConnection('live');
+        else setConnection('connecting');
+      } else {
+        setConnection('live');
+      }
+
+      // Safety net: if websocket never becomes live, fall back.
+      const fallbackTimer = setTimeout(() => {
+        if (!cancelled) setConnection((s) => (s === 'live' ? s : (startPolling(), 'polling')));
+      }, 6000);
+
+      return () => {
+        cancelled = true;
+        clearTimeout(fallbackTimer);
+        if (polling) clearInterval(polling);
+        try { echo.leave('jobs'); } catch { /* ignore */ }
+      };
+    } catch {
+      startPolling();
+      return () => { cancelled = true; if (polling) clearInterval(polling); };
+    }
   }, []);
 
   return (
@@ -42,9 +129,12 @@ export default function JobsIndex({ jobs }: { jobs: Job[] }) {
         <CardHeader className="flex-row items-center justify-between space-y-0">
           <div>
             <CardTitle>Job History</CardTitle>
-            <p className="mt-1 text-sm text-muted-foreground">Recent ESC/POS jobs ingested by the sidecar. Auto-refreshes every 5s.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Recent ESC/POS jobs ingested by the sidecar. Live via Reverb with polling fallback.</p>
           </div>
-          <Badge variant="outline">Total shown: {jobs.length}</Badge>
+          <div className="flex items-center gap-2">
+            <ConnectionBadge state={connection} />
+            <Badge variant="outline">Total shown: {jobs.length}</Badge>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>

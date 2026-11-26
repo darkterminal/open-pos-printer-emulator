@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\JobHistoryController;
 use App\Http\Controllers\ListenerController;
+use App\Http\Controllers\PrinterProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('jobs.index'));
@@ -25,4 +26,9 @@ Route::middleware('auth')->group(function (): void {
     Route::delete('/listeners/{listener}', [ListenerController::class, 'destroy'])->name('listeners.destroy');
     Route::patch('/listeners/{listener}/faults', [ListenerController::class, 'updateFaults'])->name('listeners.faults.update');
     Route::post('/listeners/sync', [ListenerController::class, 'sync'])->name('listeners.sync');
+
+    Route::get('/printer-profiles', [PrinterProfileController::class, 'index'])->name('printer-profiles.index');
+    Route::post('/printer-profiles', [PrinterProfileController::class, 'store'])->name('printer-profiles.store');
+    Route::patch('/printer-profiles/{printerProfile}', [PrinterProfileController::class, 'update'])->name('printer-profiles.update');
+    Route::delete('/printer-profiles/{printerProfile}', [PrinterProfileController::class, 'destroy'])->name('printer-profiles.destroy');
 });

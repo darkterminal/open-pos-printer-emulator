@@ -13,6 +13,7 @@ export function AppShell({ children, className }: PropsWithChildren<{ className?
   const nav = [
     { href: '/jobs', label: 'Jobs' },
     { href: '/listeners', label: 'Listeners' },
+    { href: '/printer-profiles', label: 'Profiles' },
   ];
 
   return (

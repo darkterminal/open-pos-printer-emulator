@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import { AppShell } from '@/components/app-shell';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
@@ -134,14 +135,38 @@ export default function JobShow({ job }: { job: Job }) {
           <h1 className="mt-1 text-2xl font-semibold">Job #{job.id}</h1>
           <div className="font-mono text-sm text-muted-foreground">{job.external_id}</div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" onClick={() => window.print()}>Print / Save PDF</Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const canvas = document.querySelector('[data-receipt-preview] canvas') as HTMLCanvasElement | null;
+              if (canvas) {
+                const a = document.createElement('a');
+                a.href = canvas.toDataURL('image/png');
+                a.download = `job-${job.id}-raster.png`;
+                a.click();
+                return;
+              }
+              const text = (job.render_model?.lines ?? []).map((l) => l.text ?? l.label ?? '').join('\n');
+              const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+              const a = document.createElement('a');
+              a.href = URL.createObjectURL(blob);
+              a.download = `job-${job.id}-receipt.txt`;
+              a.click();
+              URL.revokeObjectURL(a.href);
+            }}
+          >
+            Export
+          </Button>
           <Badge variant={job.status === 'parsed' ? 'secondary' : 'destructive'}>{job.status}</Badge>
           <Badge variant="outline">{job.size_bytes} B</Badge>
         </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
-        <Card>
+        <Card data-receipt-preview>
           <CardHeader><CardTitle>Receipt Preview</CardTitle></CardHeader>
           <CardContent><Preview job={job} /></CardContent>
         </Card>

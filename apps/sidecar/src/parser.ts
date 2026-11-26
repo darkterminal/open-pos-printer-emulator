@@ -538,7 +538,34 @@ export function parseEscPos(buffer: Buffer, widthDots = 576): ParseResult {
         if (end > buffer.length) { warnings.push('truncated_gs_(_payload'); break; }
 
         if (cn === 0x4c) {
-          pushCommand(offset, [b, c1, cn, pL, pH], 'GS_(L', { cn, length });
+          const m = buffer[i + 5];
+          const fn = buffer[i + 6];
+          // Best-effort decode for common raster form: m=0x30 ('0'), fn=0x70 ('p')
+          // payload: [m,fn,xL,xH,yL,yH, tone?, bx,by,c, ...data]
+          if (m === 0x30 && fn === 0x70 && length >= 11) {
+            const xL2 = buffer[i + 7] ?? 0;
+            const xH2 = buffer[i + 8] ?? 0;
+            const yL2 = buffer[i + 9] ?? 0;
+            const yH2 = buffer[i + 10] ?? 0;
+            const widthDots = xL2 + xH2 * 256;
+            const heightDots = yL2 + yH2 * 256;
+            const dataStart = i + 15; // skip m,fn,xL,xH,yL,yH,tone,bx,by,c (10 bytes) => payload offset 10 from i+5
+            const dataBytes = Math.max(0, end - dataStart);
+            const payloadData = buffer.subarray(dataStart, Math.min(end, buffer.length));
+            const MAX_PREVIEW_BYTES = 8192;
+            const raster: RasterPreview | undefined =
+              payloadData.length === dataBytes && dataBytes > 0 && dataBytes <= MAX_PREVIEW_BYTES && widthDots > 0 && heightDots > 0
+                ? { width_dots: widthDots, height: heightDots, data_base64: payloadData.toString('base64'), bytes: dataBytes }
+                : undefined;
+            if (dataBytes > MAX_PREVIEW_BYTES) warnings.push(`raster_preview_skipped:${dataBytes}_bytes`);
+            pushCommand(offset, [b, c1, cn, pL, pH], 'GS_(L', { cn, m, fn, width_dots: widthDots, height: heightDots, bytes: dataBytes });
+            pushPlaceholder('image', `[image] GS ( L raster ${widthDots}x${heightDots} dots`, raster);
+            actions.push('image');
+            i = end - 1;
+            continue;
+          }
+
+          pushCommand(offset, [b, c1, cn, pL, pH], 'GS_(L', { cn, m, fn, length });
           pushPlaceholder('image', `[image] GS ( L graphics ${length} bytes`);
           actions.push('image');
           i = end - 1;
