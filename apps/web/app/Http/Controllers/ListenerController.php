@@ -37,31 +37,31 @@ class ListenerController extends Controller
 
         $profiles = PrinterProfile::query()->orderBy('name')->get(['id', 'name']);
 
-        if (strtolower((string) $request->query('ui', '')) === 'inertia') {
-            return Inertia::render('Listeners/Index', [
+        if (strtolower((string) $request->query('ui', '')) === 'blade') {
+            return view('listeners.index', [
+                'listeners' => $listeners,
+                'sidecarById' => $sidecarById,
                 'profiles' => $profiles,
-                'listeners' => $listeners->map(fn (Listener $listener) => [
-                    'id' => $listener->id,
-                    'external_id' => $listener->external_id,
-                    'name' => $listener->name,
-                    'host' => $listener->host,
-                    'port' => $listener->port,
-                    'printer_profile_id' => $listener->printer_profile_id,
-                    'status' => $listener->status,
-                    'last_error' => $listener->last_error,
-                    'last_heartbeat_at' => optional($listener->last_heartbeat_at)->toIso8601String(),
-                    'print_jobs_count' => $listener->print_jobs_count,
-                    'printer_profile' => $listener->printerProfile?->only(['id', 'name']),
-                    'sidecar' => $sidecarById[$listener->external_id] ?? null,
-                    'fault_config' => $sidecarById[$listener->external_id]['fault_config'] ?? ($listener->fault_config_json ?? []),
-                ])->values(),
             ]);
         }
 
-        return view('listeners.index', [
-            'listeners' => $listeners,
-            'sidecarById' => $sidecarById,
+        return Inertia::render('Listeners/Index', [
             'profiles' => $profiles,
+            'listeners' => $listeners->map(fn (Listener $listener) => [
+                'id' => $listener->id,
+                'external_id' => $listener->external_id,
+                'name' => $listener->name,
+                'host' => $listener->host,
+                'port' => $listener->port,
+                'printer_profile_id' => $listener->printer_profile_id,
+                'status' => $listener->status,
+                'last_error' => $listener->last_error,
+                'last_heartbeat_at' => optional($listener->last_heartbeat_at)->toIso8601String(),
+                'print_jobs_count' => $listener->print_jobs_count,
+                'printer_profile' => $listener->printerProfile?->only(['id', 'name']),
+                'sidecar' => $sidecarById[$listener->external_id] ?? null,
+                'fault_config' => $sidecarById[$listener->external_id]['fault_config'] ?? ($listener->fault_config_json ?? []),
+            ])->values(),
         ]);
     }
 

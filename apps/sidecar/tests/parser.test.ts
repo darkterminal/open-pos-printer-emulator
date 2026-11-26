@@ -168,12 +168,25 @@ describe('parseEscPos', () => {
   it('skips unknown length-prefixed GS ( payloads without polluting text', () => {
     const payload = Buffer.from([0x41, 0x42, 0x43, 0x44]);
     const buf = Buffer.concat([
-      Buffer.from([0x1d, 0x28, 0x4c, payload.length, 0x00]),
+      Buffer.from([0x1d, 0x28, 0x7f, payload.length, 0x00]),
       payload,
       Buffer.from('OK\n'),
     ]);
     const res = parseEscPos(buf);
     expect(res.render_model.lines.map((l) => l.text)).toEqual(['OK']);
     expect(res.commands.some((c) => c.name === 'GS_(unknown')).toBe(true);
+  });
+
+  it('parses GS ( L as graphics placeholder', () => {
+    const payload = Buffer.from([0x41, 0x42, 0x43, 0x44]);
+    const buf = Buffer.concat([
+      Buffer.from([0x1d, 0x28, 0x4c, payload.length, 0x00]),
+      payload,
+      Buffer.from('OK\n'),
+    ]);
+    const res = parseEscPos(buf);
+    expect(res.commands.some((c) => c.name === 'GS_(L')).toBe(true);
+    expect(res.render_model.actions).toContain('image');
+    expect(res.render_model.lines.some((l) => l.kind === 'image')).toBe(true);
   });
 });

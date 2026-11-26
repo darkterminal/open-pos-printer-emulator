@@ -19,7 +19,7 @@ Open POS Printer Emulator adalah aplikasi web open source self-hosted untuk meng
 ## Stack
 
 - **Backend:** Laravel 12+ (PHP 8.4+)
-- **Frontend:** Blade (stabil) + Inertia.js v2 + React 19 + TypeScript skeleton (incremental migration)
+- **Frontend:** Inertia.js v2 + React 19 + TypeScript + shadcn/ui (default), Blade fallback (`?ui=blade`)
 - **Real-time:** Laravel Reverb + Laravel Echo
 - **TCP Listener & Parser:** Node.js TypeScript sidecar
 - **Database:** PostgreSQL (dev/prod container), SQLite `:memory:` untuk test
@@ -30,7 +30,7 @@ Open POS Printer Emulator adalah aplikasi web open source self-hosted untuk meng
 ```text
 .
 ├── apps/
-│   ├── web/                  # Laravel + Blade + Inertia skeleton
+│   ├── web/                  # Laravel + Inertia React + shadcn/ui (Blade fallback)
 │   └── sidecar/              # Node.js TCP listener + ESC/POS parser
 ├── docker/                   # Konfigurasi container/runtime
 ├── .internal/                # Dokumen internal planning (gitignored)
@@ -62,7 +62,7 @@ Endpoints lokal:
 printf "\x1B\x40Hello ESC/POS\n\x1D\x56\x00" | nc 127.0.0.1 9100
 ```
 
-Buka `/jobs` atau `/jobs?ui=inertia` untuk melihat job.
+Buka `/jobs` (Inertia default) atau `/jobs?ui=blade` untuk fallback Blade.
 
 ## Fitur Saat Ini
 
@@ -74,7 +74,7 @@ Buka `/jobs` atau `/jobs?ui=inertia` untuk melihat job.
 - Listener management `/listeners`: create/edit/delete listener, sidecar status, heartbeat, last error, fault simulation toggles (paper_out, cover_open, cutter_error, offline).
 - Sidecar control endpoints: ensure/start listener, stop, update faults. Laravel internal listener status ingest + bootstrap endpoints.
 - Listener sync command: `php artisan sidecar:sync-listeners` (also run on web startup and scheduled every minute). Sidecar bootstraps listeners from Laravel and stops orphan listeners not in DB.
-- Inertia skeleton pages: `/jobs?ui=inertia`, `/jobs/{id}?ui=inertia`, `/listeners?ui=inertia`.
+- UI default: Inertia React + shadcn/ui di `/jobs`, `/jobs/{id}`, `/listeners`. Blade fallback tersedia via `?ui=blade`.
 
 ## Testing & Checks
 
@@ -92,6 +92,13 @@ kiri compose exec sidecar npm test
 kiri compose exec sidecar npm run lint
 kiri compose exec web npm run build
 ```
+
+Playwright MCP smoke checklist (UI/runtime):
+- Login, buka `/jobs` (Inertia default) dan `/listeners`.
+- Pastikan fallback Blade: `/jobs?ui=blade`, `/listeners?ui=blade`.
+- Kirim payload TCP: `printf "\x1B\x40SMOKE\n\x1D\x56\x00" | nc 127.0.0.1 9100`.
+- Verifikasi job muncul, detail `/jobs/{id}` render preview/warnings/commands/raw.
+- Uji listener CRUD/fault/sync, cek error EADDRINUSE tampil actionable.
 
 > Aturan agent/dev: selalu double-check implementasi lokal (test, lint, build, smoke path relevan) sebelum push ke GitHub untuk mengurangi bug setelah push.
 

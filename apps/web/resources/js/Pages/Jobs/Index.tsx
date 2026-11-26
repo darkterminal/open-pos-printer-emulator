@@ -3,6 +3,8 @@ import { useEffect } from 'react';
 import { AppShell } from '@/components/app-shell';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
+import { StatusBadge } from '@/components/ui/status-badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 type Job = {
@@ -18,16 +20,10 @@ type Job = {
   received_at?: string | null;
 };
 
-function statusBadge(status: string, warnings: number) {
-  const s = status.toLowerCase();
-  const base = s === 'parsed'
-    ? <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/15">parsed</Badge>
-    : s === 'parse_error'
-      ? <Badge variant="destructive">parse_error</Badge>
-      : <Badge variant="secondary">{status}</Badge>;
+function jobStatus(status: string, warnings: number) {
   return (
     <div className="flex items-center gap-2">
-      {base}
+      <StatusBadge status={status} />
       {warnings > 0 && <Badge className="bg-amber-500/15 text-amber-400 border-amber-500/20 hover:bg-amber-500/15">{warnings} warning(s)</Badge>}
     </div>
   );
@@ -67,7 +63,7 @@ export default function JobsIndex({ jobs }: { jobs: Job[] }) {
               {jobs.map((job) => (
                 <TableRow key={job.id}>
                   <TableCell>
-                    <Link href={`/jobs/${job.id}?ui=inertia`} className="font-medium text-primary hover:underline">#{job.id}</Link>
+                    <Link href={`/jobs/${job.id}`} className="font-medium text-primary hover:underline">#{job.id}</Link>
                     <div className="text-xs text-muted-foreground">{job.external_id}</div>
                   </TableCell>
                   <TableCell className="text-xs">{job.received_at ?? '-'}</TableCell>
@@ -77,13 +73,15 @@ export default function JobsIndex({ jobs }: { jobs: Job[] }) {
                   </TableCell>
                   <TableCell className="font-mono text-xs">{job.source_ip ?? '-'}{job.source_port ? `:${job.source_port}` : ''}</TableCell>
                   <TableCell>{job.size_bytes} B</TableCell>
-                  <TableCell>{statusBadge(job.status, job.warnings_count)}</TableCell>
+                  <TableCell>{jobStatus(job.status, job.warnings_count)}</TableCell>
                   <TableCell className="font-mono text-xs text-muted-foreground">{job.correlation_id ?? '-'}</TableCell>
                 </TableRow>
               ))}
               {jobs.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground">No jobs yet.</TableCell>
+                  <TableCell colSpan={7}>
+                    <EmptyState title="No jobs yet" description="Send an ESC/POS payload to a listener TCP port to see it here." />
+                  </TableCell>
                 </TableRow>
               )}
             </TableBody>

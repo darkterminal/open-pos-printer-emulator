@@ -536,6 +536,15 @@ export function parseEscPos(buffer: Buffer, widthDots = 576): ParseResult {
         const length = pL + pH * 256;
         const end = i + 5 + length;
         if (end > buffer.length) { warnings.push('truncated_gs_(_payload'); break; }
+
+        if (cn === 0x4c) {
+          pushCommand(offset, [b, c1, cn, pL, pH], 'GS_(L', { cn, length });
+          pushPlaceholder('image', `[image] GS ( L graphics ${length} bytes`);
+          actions.push('image');
+          i = end - 1;
+          continue;
+        }
+
         unknownCount += 1;
         pushCommand(offset, [b, c1, cn, pL, pH], 'GS_(unknown', { cn, length });
         i = end - 1;

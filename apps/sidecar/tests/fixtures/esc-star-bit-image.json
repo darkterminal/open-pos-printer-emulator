@@ -1,0 +1,23 @@
+{
+  "name": "esc-star-bit-image",
+  "description": "ESC * 8-dot single density bit image placeholder",
+  "raw_base64": "G0AbKgAIAAABAgMEBQYHCh1WAA==",
+  "expected": {
+    "status": "ok",
+    "warnings": [],
+    "actions": [
+      "initialize",
+      "image",
+      "cut"
+    ],
+    "command_names": [
+      "ESC_@",
+      "ESC_*",
+      "LF",
+      "GS_V"
+    ],
+    "lines": [
+      { "kind": "image", "labelContains": "bit image" }
+    ]
+  }
+}

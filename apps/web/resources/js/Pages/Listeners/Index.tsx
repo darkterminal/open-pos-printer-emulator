@@ -2,10 +2,10 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { FormEvent, useState } from 'react';
 import { AppShell } from '@/components/app-shell';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { StatusBadge } from '@/components/ui/status-badge';
 import {
   Table,
   TableBody,
@@ -51,13 +52,7 @@ type Listener = {
 
 type PageProps = { flash?: { status?: string }; errors?: Record<string, string> };
 
-function statusBadge(status: string) {
-  const normalized = status.toLowerCase();
-  if (normalized === 'listening') return <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/20">listening</Badge>;
-  if (normalized === 'error') return <Badge variant="destructive">error</Badge>;
-  if (normalized === 'starting') return <Badge className="bg-amber-500/15 text-amber-400 border-amber-500/20">starting</Badge>;
-  return <Badge variant="secondary">{status}</Badge>;
-}
+// status rendering uses shared StatusBadge
 
 function FaultForm({ listener }: { listener: Listener }) {
   const faults = listener.fault_config ?? {};
@@ -251,10 +246,10 @@ export default function ListenersIndex({ listeners, profiles = [] }: { listeners
                     </TableCell>
                     <TableCell className="font-mono text-xs">{listener.host}:{listener.port}</TableCell>
                     <TableCell>{listener.printer_profile?.name ?? <span className="text-muted-foreground">-</span>}</TableCell>
-                    <TableCell>{statusBadge(listener.status)}</TableCell>
+                    <TableCell><StatusBadge status={listener.status} /></TableCell>
                     <TableCell>
                       <div className="space-y-1">
-                        {statusBadge(sidecarStatus)}
+                        <StatusBadge status={sidecarStatus} />
                         {listener.last_heartbeat_at && <div className="text-xs text-muted-foreground">Heartbeat: {listener.last_heartbeat_at}</div>}
                         {(listener.sidecar?.last_error || listener.last_error) && (
                           <div className="text-xs text-destructive">{listener.sidecar?.last_error ?? listener.last_error}</div>
@@ -274,7 +269,9 @@ export default function ListenersIndex({ listeners, profiles = [] }: { listeners
               })}
               {listeners.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground">No listeners configured.</TableCell>
+                  <TableCell colSpan={8}>
+                    <EmptyState title="No listeners configured" description="Create a listener to accept ESC/POS TCP connections." />
+                  </TableCell>
                 </TableRow>
               )}
             </TableBody>

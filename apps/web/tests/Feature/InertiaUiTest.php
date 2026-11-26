@@ -70,7 +70,7 @@ class InertiaUiTest extends TestCase
     {
         [$user] = $this->seedUserWithListener();
 
-        $response = $this->actingAs($user)->get('/jobs?ui=inertia');
+        $response = $this->actingAs($user)->get('/jobs');
 
         $response->assertOk();
         $response->assertViewIs('app');
@@ -84,7 +84,7 @@ class InertiaUiTest extends TestCase
     {
         [$user, $listener, $profile] = $this->seedUserWithListener();
 
-        $response = $this->actingAs($user)->get('/listeners?ui=inertia');
+        $response = $this->actingAs($user)->get('/listeners');
 
         $response->assertOk();
         $response->assertViewIs('app');
@@ -98,7 +98,7 @@ class InertiaUiTest extends TestCase
     {
         [$user] = $this->seedUserWithListener();
 
-        $response = $this->actingAs($user)->get('/jobs?ui=inertia');
+        $response = $this->actingAs($user)->get('/jobs');
 
         $response->assertOk();
         $page = $this->inertiaPage($response);

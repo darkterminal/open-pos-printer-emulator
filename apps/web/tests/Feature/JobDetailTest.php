@@ -88,9 +88,10 @@ class JobDetailTest extends TestCase
         $job = $this->makeJob();
         $user = User::query()->firstOrFail();
 
-        $response = $this->actingAs($user)->get(route('jobs.show', $job));
+        $response = $this->actingAs($user)->get(route('jobs.show', [$job, 'ui' => 'blade']));
 
         $response->assertOk();
+        $response->assertViewIs('jobs.show');
         $response->assertSee('Receipt Preview');
         $response->assertSee('TOTAL');
         $response->assertSee('Command Inspector');
@@ -104,7 +105,7 @@ class JobDetailTest extends TestCase
         $job = $this->makeJob();
         $user = User::query()->firstOrFail();
 
-        $response = $this->actingAs($user)->get(route('jobs.show', [$job, 'ui' => 'inertia']));
+        $response = $this->actingAs($user)->get(route('jobs.show', $job));
 
         $response->assertOk();
         $response->assertViewIs('app');

@@ -183,4 +183,28 @@ describe('golden ESC/POS fixtures', () => {
     expect(res.render_model.lines[0].kind).toBe(fixture.expected.lines![0].kind);
     expect(res.render_model.lines[0].label ?? '').toContain(fixture.expected.lines![0].labelContains);
   });
+
+  it('esc-star-bit-image fixture parses ESC * bit image placeholder', () => {
+    const fixture = loadFixture('esc-star-bit-image');
+    const res = parseEscPos(Buffer.from(fixture.raw_base64, 'base64'));
+
+    expect(res.status).toBe(fixture.expected.status);
+    expect(res.warnings).toEqual(fixture.expected.warnings);
+    expect(res.render_model.actions).toEqual(fixture.expected.actions);
+    expect(res.commands.map((c) => c.name)).toEqual(fixture.expected.command_names);
+    expect(res.render_model.lines[0].kind).toBe(fixture.expected.lines![0].kind);
+    expect(res.render_model.lines[0].label ?? '').toContain(fixture.expected.lines![0].labelContains);
+  });
+
+  it('gs-l-raster fixture parses GS ( L graphics placeholder', () => {
+    const fixture = loadFixture('gs-l-raster');
+    const res = parseEscPos(Buffer.from(fixture.raw_base64, 'base64'));
+
+    expect(res.status).toBe(fixture.expected.status);
+    expect(res.warnings).toEqual(fixture.expected.warnings);
+    expect(res.render_model.actions).toEqual(fixture.expected.actions);
+    expect(res.commands.map((c) => c.name)).toEqual(fixture.expected.command_names);
+    expect(res.render_model.lines[0].kind).toBe(fixture.expected.lines![0].kind);
+    expect(res.render_model.lines[0].label ?? '').toContain(fixture.expected.lines![0].labelContains);
+  });
 });
