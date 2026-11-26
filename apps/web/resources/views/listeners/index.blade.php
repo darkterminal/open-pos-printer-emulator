@@ -13,8 +13,35 @@
     <div>
         <a href="{{ route('jobs.index') }}" class="muted">&larr; Job history</a>
         <h1 style="margin:6px 0 0;">Listeners</h1>
-        <p class="muted" style="margin:6px 0 0;">Manage TCP listener status and fault simulation. Default listener: <code>lst_default_9100</code>.</p>
+        <p class="muted" style="margin:6px 0 0;">Manage TCP listener status and fault simulation.</p>
     </div>
+</div>
+
+<div class="panel" style="margin-bottom:16px;">
+    <h2 style="margin:0 0 12px; font-size:16px;">Add Listener</h2>
+    <form method="POST" action="{{ route('listeners.store') }}" style="display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; align-items:end;">
+        @csrf
+        <label>Name
+            <input name="name" value="{{ old('name') }}" required placeholder="Warehouse 9101">
+        </label>
+        <label>Host
+            <input name="host" value="{{ old('host', '0.0.0.0') }}" required>
+        </label>
+        <label>Port
+            <input name="port" type="number" min="1" max="65535" value="{{ old('port', '9101') }}" required>
+        </label>
+        <label>Printer Profile
+            <select name="printer_profile_id">
+                <option value="">(none)</option>
+                @foreach ($profiles ?? [] as $profile)
+                    <option value="{{ $profile->id }}" @selected((string) old('printer_profile_id') === (string) $profile->id)>{{ $profile->name }}</option>
+                @endforeach
+            </select>
+        </label>
+        <div>
+            <button class="btn" type="submit">Create & Start</button>
+        </div>
+    </form>
 </div>
 
 @if (session('status'))
@@ -37,6 +64,7 @@
             <th>Sidecar</th>
             <th>Jobs</th>
             <th>Fault Simulation</th>
+            <th>Actions</th>
         </tr>
         </thead>
         <tbody>
@@ -82,10 +110,17 @@
                         <button class="btn btn-secondary" type="submit">Apply</button>
                     </form>
                 </td>
+                <td>
+                    <form method="POST" action="{{ route('listeners.destroy', $listener) }}" onsubmit="return confirm('Remove listener {{ $listener->name }}?');">
+                        @csrf
+                        @method('DELETE')
+                        <button class="btn btn-secondary" type="submit" style="border-color:#5a2522; color:#ff7b72;">Delete</button>
+                    </form>
+                </td>
             </tr>
         @empty
             <tr>
-                <td colspan="7" class="muted">No listeners configured.</td>
+                <td colspan="8" class="muted">No listeners configured.</td>
             </tr>
         @endforelse
         </tbody>

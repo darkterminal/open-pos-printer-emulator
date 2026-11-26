@@ -20,5 +20,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/jobs/{job}', [JobHistoryController::class, 'show'])->name('jobs.show');
 
     Route::get('/listeners', [ListenerController::class, 'index'])->name('listeners.index');
+    Route::post('/listeners', [ListenerController::class, 'store'])->name('listeners.store');
+    Route::delete('/listeners/{listener}', [ListenerController::class, 'destroy'])->name('listeners.destroy');
     Route::patch('/listeners/{listener}/faults', [ListenerController::class, 'updateFaults'])->name('listeners.faults.update');
 });
