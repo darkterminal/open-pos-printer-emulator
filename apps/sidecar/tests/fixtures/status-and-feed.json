@@ -1,0 +1,24 @@
+{
+  "name": "status-and-feed",
+  "description": "DLE EOT status, ESC 3 line spacing, ESC J feed dots",
+  "raw_base64": "G0AQBAEbMw4bSgRUZXN0Ch1WAA==",
+  "expected": {
+    "status": "ok",
+    "warnings": [],
+    "actions": [
+      "initialize",
+      "cut"
+    ],
+    "command_names": [
+      "ESC_@",
+      "DLE_EOT",
+      "ESC_3",
+      "ESC_J",
+      "LF",
+      "GS_V"
+    ],
+    "lines": [
+      { "text": "Test" }
+    ]
+  }
+}
