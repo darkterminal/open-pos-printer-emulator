@@ -19,9 +19,11 @@ interface Fixture {
   raw_base64: string;
   expected: {
     status: string;
-    warnings: string[];
-    actions: string[];
-    lines: ExpectedLine[];
+    warnings?: string[];
+    warnings_contains?: string[];
+    actions?: string[];
+    lines?: ExpectedLine[];
+    command_names?: string[];
   };
 }
 
@@ -40,9 +42,9 @@ describe('golden ESC/POS fixtures', () => {
     expect(res.status).toBe(fixture.expected.status);
     expect(res.warnings).toEqual(fixture.expected.warnings);
     expect(res.render_model.actions).toEqual(fixture.expected.actions);
-    expect(res.render_model.lines).toHaveLength(fixture.expected.lines.length);
+    expect(res.render_model.lines).toHaveLength(fixture.expected.lines!.length);
 
-    fixture.expected.lines.forEach((expected, index) => {
+    fixture.expected.lines!.forEach((expected, index) => {
       const actual = res.render_model.lines[index];
       if (expected.text !== undefined) expect(actual.text).toBe(expected.text);
       if (expected.kind !== undefined) expect(actual.kind).toBe(expected.kind);
@@ -57,5 +59,26 @@ describe('golden ESC/POS fixtures', () => {
         expect(typeof actual.raster?.data_base64).toBe('string');
       }
     });
+  });
+
+  it('position-and-status fixture matches command names', () => {
+    const fixture = loadFixture('position-and-status');
+    const res = parseEscPos(Buffer.from(fixture.raw_base64, 'base64'));
+
+    expect(res.status).toBe(fixture.expected.status);
+    expect(res.warnings).toEqual(fixture.expected.warnings);
+    expect(res.render_model.actions).toEqual(fixture.expected.actions);
+    expect(res.commands.map((c) => c.name)).toEqual(fixture.expected.command_names);
+  });
+
+  it('faulted-partial fixture produces expected warnings', () => {
+    const fixture = loadFixture('faulted-partial');
+    const res = parseEscPos(Buffer.from(fixture.raw_base64, 'base64'));
+
+    expect(res.status).toBe(fixture.expected.status);
+    for (const warning of fixture.expected.warnings_contains ?? []) {
+      expect(res.warnings).toContain(warning);
+    }
+    expect(res.render_model.actions).toEqual(fixture.expected.actions);
   });
 });

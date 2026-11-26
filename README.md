@@ -2,7 +2,7 @@
 
 Open POS Printer Emulator adalah aplikasi web open source self-hosted untuk menguji integrasi ESC/POS tanpa printer fisik. Aplikasi POS dapat mengirim byte stream ESC/POS melalui TCP/IP mentah ke port yang dapat dikonfigurasi (default `9100`), lalu pengembang dapat melihat live preview struk, command inspector, raw hex/ASCII, dan riwayat job di browser.
 
-> Status: **Phase 1 / Sprint 1 - Foundation**. Repositori ini sedang dibangun dari nol.
+> Status: **MVP in progress**. Repo private sampai siap dipublikasikan.
 
 ## Tujuan MVP
 
@@ -19,107 +19,89 @@ Open POS Printer Emulator adalah aplikasi web open source self-hosted untuk meng
 ## Stack
 
 - **Backend:** Laravel 12+ (PHP 8.4+)
-- **Frontend:** Inertia.js v2 + React 19 + TypeScript + Tailwind CSS + shadcn/ui
+- **Frontend:** Blade (stabil) + Inertia.js v2 + React 19 + TypeScript skeleton (incremental migration)
 - **Real-time:** Laravel Reverb + Laravel Echo
 - **TCP Listener & Parser:** Node.js TypeScript sidecar
-- **Database:** PostgreSQL (produksi/dev container), SQLite (opsional untuk test lokal tertentu)
-- **Orchestration:** Kiri Compose (Docker tetap fallback kompatibilitas, bukan default)
+- **Database:** PostgreSQL (dev/prod container), SQLite `:memory:` untuk test
+- **Orchestration:** Kiri Compose (Docker fallback kompatibilitas)
 
 ## Struktur Repositori
 
 ```text
 .
 ├── apps/
-│   ├── web/                  # Laravel + Inertia + React
+│   ├── web/                  # Laravel + Blade + Inertia skeleton
 │   └── sidecar/              # Node.js TCP listener + ESC/POS parser
 ├── docker/                   # Konfigurasi container/runtime
-├── .internal/                # Dokumen internal planning (excluded dari git)
-│   ├── architecture/         # Arsitektur dan ADR
-│   ├── api/                  # Kontrak internal sidecar <-> Laravel
-│   ├── guides/               # Panduan setup dan troubleshooting
-│   └── contributing/         # Panduan kontribusi
-├── .github/workflows/        # CI/CD GitHub Actions
+├── .internal/                # Dokumen internal planning (gitignored)
 ├── compose.yaml              # Kiri Compose
 └── Makefile                  # Task wrapper
 ```
 
-## Prasyarat
-
-- Kiri (`command -v kiri`)
-- Git
-- Opsional untuk development di luar container: PHP 8.4+, Composer, Node.js 20+
-
 ## Quick Start (Kiri)
 
 ```bash
-# 1. Clone
-git clone <repo-url>
-cd open-pos-printer-emulator
-
-# 2. Salin environment
 cp apps/web/.env.example apps/web/.env
 cp apps/sidecar/.env.example apps/sidecar/.env
 
-# 3. Jalankan service
 kiri compose up -d --build
-
-# 4. Setup Laravel (setelah service web tersedia)
 kiri compose exec web composer install
 kiri compose exec web php artisan key:generate
 kiri compose exec web php artisan migrate --seed
-
-# 5. Buka aplikasi
-# Web: http://localhost:8080
-# Reverb: ws://localhost:8081
-# TCP listener: localhost:9100
 ```
 
-> Catatan Kiri: jika build gagal karena mirror BuildKit `172.17.0.1:47391` timeout, gunakan builder sementara `kiri-nomirror` (lihat `.internal/notes/kiri-buildkit-diagnosis.md`, gitignored) untuk build image dengan `--load`, lalu jalankan `kiri compose up -d --no-build`.
+Endpoints lokal:
+- Web: `http://localhost:8080`
+- Reverb: `ws://localhost:8081`
+- TCP listener: `localhost:9100`
+- Sidecar health: `http://localhost:3001/health`
 
 ## Verifikasi Cepat
-
-Kirim payload ESC/POS sederhana ke listener:
 
 ```bash
 printf "\x1B\x40Hello ESC/POS\n\x1D\x56\x00" | nc 127.0.0.1 9100
 ```
 
-Ekspektasi Sprint 1: job tercatat di log sidecar dan/atau tersimpan di database, lalu tampil di halaman riwayat job.
+Buka `/jobs` atau `/jobs?ui=inertia` untuk melihat job.
 
 ## Fitur Saat Ini
 
-- TCP listener `9100` di sidecar Node.js, finalize via idle timeout / client close.
-- Parser ESC/POS subset: `ESC @`, align, bold, underline, text size, feed, cut, text + line feed.
-- Ingest internal ke Laravel dengan token, validasi payload, idempotency `external_id`, dan batas ukuran payload.
-- Riwayat job real-time (`/jobs`) via Reverb/Echo dengan polling fallback.
-- Detail job (`/jobs/{id}`): receipt preview dari `render_model`, warnings, command inspector, metadata, dan raw payload base64.
+- TCP listener 9100 + finalize idle timeout/client close.
+- Parser ESC/POS subset: init, align, bold/underline, text size, line spacing/feed, HT/ESC D tabs, ESC $/\\ positioning, cut, cash drawer, barcode/QR/raster image placeholders, DLE EOT status, CP437/CP850/CP858/CP1252/ISO-8859-1 decode.
+- Ingest internal Laravel: token auth, payload validation, idempotent `external_id`, raw payload persisted on parse error.
+- Realtime `/jobs` via Reverb/Echo + polling fallback `/jobs/feed`.
+- Job detail `/jobs/{id}`: receipt preview, command inspector, warnings, raw base64. Raster image preview rendered as monochrome canvas.
+- Listener management `/listeners`: sidecar status, heartbeat, last error, fault simulation toggles (paper_out, cover_open, cutter_error, offline).
+- Sidecar control endpoints: ensure/start listener, stop, update faults. Laravel internal listener status ingest endpoint.
+- Listener sync command: `php artisan sidecar:sync-listeners` (also run on web startup and scheduled every minute).
+- Inertia skeleton pages: `/jobs?ui=inertia`, `/jobs/{id}?ui=inertia`, `/listeners?ui=inertia`.
 
-## Pengembangan
-
-Gunakan `Makefile` untuk task umum:
+## Testing & Checks
 
 ```bash
-make up
-make down
-make logs
 make test
 make lint
 ```
 
-> Catatan test: `phpunit.xml` memaksa `APP_ENV=testing` dan SQLite `:memory:` lewat `<server>`/`<env>` agar test di container tidak menyentuh database PostgreSQL dev. `tests/TestCase.php` juga punya guard yang menolak test jika koneksi bukan SQLite in-memory.
+Manual checks:
 
-## Dokumentasi Internal
+```bash
+kiri compose exec web php artisan test
+kiri compose exec web ./vendor/bin/pint --test
+kiri compose exec sidecar npm test
+kiri compose exec sidecar npm run lint
+kiri compose exec web npm run build
+```
 
-Dokumen perencanaan internal disimpan di `.internal/` dan tidak di-commit ke git:
+> Aturan agent/dev: selalu double-check implementasi lokal (test, lint, build, smoke path relevan) sebelum push ke GitHub untuk mengurangi bug setelah push.
 
-- `.internal/architecture/ARCHITECTURE.md`
-- `.internal/architecture/adr/0001-sidecar-node-for-tcp-parser.md`
-- `.internal/api/internal-sidecar-contract.md`
+## Troubleshooting
 
-## Kontribusi
-
-Proyek ini akan menggunakan trunk-based development, Conventional Commits, dan PR dengan squash merge. Lihat `CONTRIBUTING.md` (akan dilengkapi) dan issue tracker untuk pekerjaan yang bisa diambil.
+- **Kiri BuildKit mirror timeout**: jika build gagal karena `172.17.0.1:47391`, gunakan builder `docker-container` tanpa mirror, build `--load`, lalu `kiri compose up -d --no-build`.
+- **Reverb tidak live**: cek `kiri compose ps` untuk service `reverb` dan port `8081`; UI `/jobs` punya polling fallback.
+- **Test menghapus data dev**: jangan override `phpunit.xml` env; test harus jalan di SQLite `:memory:`.
+- **Sidecar status stale**: jalankan `kiri compose exec web php artisan sidecar:sync-listeners`.
 
 ## Lisensi
 
-Proyek ini dilisensikan di bawah [Apache License 2.0](LICENSE).
+[Apache License 2.0](LICENSE)

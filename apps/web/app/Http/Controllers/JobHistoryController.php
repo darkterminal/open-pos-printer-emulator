@@ -41,9 +41,33 @@ class JobHistoryController extends Controller
         ]);
     }
 
-    public function show(PrintJob $job): View
+    public function show(Request $request, PrintJob $job): View|InertiaResponse
     {
         $job->load(['listener:id,name,external_id', 'rawPayload']);
+
+        if ($request->boolean('ui') === true && $request->query('ui') === 'inertia') {
+            return Inertia::render('Jobs/Show', [
+                'job' => [
+                    'id' => $job->id,
+                    'external_id' => $job->external_id,
+                    'correlation_id' => $job->correlation_id,
+                    'status' => $job->status,
+                    'source_ip' => $job->source_ip,
+                    'source_port' => $job->source_port,
+                    'size_bytes' => $job->size_bytes,
+                    'received_at' => optional($job->received_at)->toIso8601String(),
+                    'completed_at' => optional($job->completed_at)->toIso8601String(),
+                    'connection_status' => $job->connection_status,
+                    'parser_profile' => $job->parser_profile,
+                    'parser_warnings' => $job->warnings_json ?? [],
+                    'warnings_count' => $job->warnings_count,
+                    'render_model' => $job->render_model_json ?? ['lines' => [], 'actions' => [], 'width_dots' => 576],
+                    'commands' => $job->commands_json ?? [],
+                    'raw_payload_base64' => $job->rawPayload?->payload_base64,
+                    'listener' => $job->listener?->only(['name', 'external_id']),
+                ],
+            ]);
+        }
 
         return view('jobs.show', [
             'job' => $job,

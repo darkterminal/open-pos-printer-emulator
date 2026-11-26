@@ -1,0 +1,21 @@
+{
+  "name": "position-and-status",
+  "description": "ESC D tab stops, HT, ESC $ absolute, ESC \\ relative, DLE EOT status",
+  "raw_base64": "G0AbRAQIAEEJQgobJCAAG1wQABAEAQ==",
+  "expected": {
+    "status": "ok",
+    "warnings": [],
+    "actions": [
+      "initialize"
+    ],
+    "command_names": [
+      "ESC_@",
+      "ESC_D",
+      "HT",
+      "LF",
+      "ESC_$",
+      "ESC_\\",
+      "DLE_EOT"
+    ]
+  }
+}
