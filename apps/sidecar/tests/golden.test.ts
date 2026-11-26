@@ -125,4 +125,16 @@ describe('golden ESC/POS fixtures', () => {
     expect(line.kind).toBe(fixture.expected.lines![0].kind);
     expect(line.label ?? '').toContain(fixture.expected.lines![0].labelContains);
   });
+
+  it('qr-gs-k fixture parses QR store and print', () => {
+    const fixture = loadFixture('qr-gs-k');
+    const res = parseEscPos(Buffer.from(fixture.raw_base64, 'base64'));
+
+    expect(res.status).toBe(fixture.expected.status);
+    expect(res.warnings).toEqual(fixture.expected.warnings);
+    expect(res.render_model.actions).toEqual(fixture.expected.actions);
+    expect(res.commands.map((c) => c.name)).toEqual(fixture.expected.command_names);
+    const line = res.render_model.lines.find((l) => l.kind === 'qrcode');
+    expect(line?.label ?? '').toContain(fixture.expected.lines![0].labelContains);
+  });
 });

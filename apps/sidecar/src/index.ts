@@ -70,11 +70,31 @@ app.patch('/control/v1/listeners/:externalId/faults', authMiddleware, (req, res)
   res.status(200).json({ data: listener });
 });
 
+async function sleep(ms: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function bootstrapWithRetry(attempts = 10): Promise<void> {
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      const listeners = await fetchBootstrapListeners();
+      await registry.bootstrapFromLaravel(async () => listeners);
+      logger.info({ attempt, listener_count: listeners.length }, 'listener bootstrap completed');
+      return;
+    } catch (err) {
+      const delayMs = Math.min(1000 * attempt, 5000);
+      logger.warn({ err, attempt, attempts, delay_ms: delayMs }, 'listener bootstrap failed; retrying');
+      if (attempt === attempts) return;
+      await sleep(delayMs);
+    }
+  }
+}
+
 void (async () => {
   await registry.startDefault().catch((err) => {
     logger.error({ err }, 'failed to start default listener');
   });
-  await registry.bootstrapFromLaravel(fetchBootstrapListeners);
+  await bootstrapWithRetry();
 })();
 
 setInterval(() => {

@@ -1,0 +1,24 @@
+{
+  "name": "qr-gs-k",
+  "description": "GS ( k QR store and print",
+  "raw_base64": "G0AdKGsWADFQMGh0dHBzOi8vZXhhbXBsZS5jb20dKGsDADFRMAodVgA=",
+  "expected": {
+    "status": "ok",
+    "warnings": [],
+    "actions": [
+      "initialize",
+      "qrcode",
+      "cut"
+    ],
+    "command_names": [
+      "ESC_@",
+      "GS_(k",
+      "GS_(k",
+      "LF",
+      "GS_V"
+    ],
+    "lines": [
+      { "kind": "qrcode", "labelContains": "https://example.com" }
+    ]
+  }
+}
