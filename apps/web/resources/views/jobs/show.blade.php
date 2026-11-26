@@ -173,14 +173,49 @@
 </div>
 
 <div class="panel" style="margin-top:16px;">
-    <details class="raw">
-        <summary>Raw payload (base64) — {{ $job->rawPayload ? 'stored' : 'not stored' }}</summary>
-        @if ($job->rawPayload)
-            <pre class="raw-pre">{{ $job->rawPayload->content_base64 }}</pre>
-        @else
-            <p class="muted">Raw payload record is missing for this job.</p>
-        @endif
-    </details>
+    <h2 class="section-title">Raw Data Viewer</h2>
+    @php
+        $rawBase64 = $job->rawPayload?->content_base64;
+        $bytes = $rawBase64 ? base64_decode($rawBase64, true) : null;
+        $maxBytes = 65536;
+        $slice = is_string($bytes) ? substr($bytes, 0, $maxBytes) : '';
+        $lines = [];
+        $len = strlen($slice);
+        for ($offset = 0; $offset < $len; $offset += 16) {
+            $chunk = substr($slice, $offset, 16);
+            $hexParts = [];
+            $ascii = '';
+            $chunkLen = strlen($chunk);
+            for ($i = 0; $i < 16; $i++) {
+                if ($i < $chunkLen) {
+                    $byte = ord($chunk[$i]);
+                    $hexParts[] = sprintf('%02X', $byte);
+                    $ascii .= ($byte >= 32 && $byte <= 126) ? $chunk[$i] : '.';
+                } else {
+                    $hexParts[] = '  ';
+                    $ascii .= ' ';
+                }
+                if ($i === 7) $hexParts[] = '';
+            }
+            $lines[] = sprintf('%08X  %s  |%s|', $offset, implode(' ', $hexParts), $ascii);
+        }
+        if (is_string($bytes) && strlen($bytes) > $maxBytes) {
+            $lines[] = sprintf('... truncated, showing first %d bytes of %d ...', $maxBytes, strlen($bytes));
+        }
+    @endphp
+    @if ($rawBase64)
+        <div class="muted" style="margin-bottom:8px; font-size:12px;">SHA-256: {{ $job->rawPayload?->content_sha256 ?? $job->checksum_sha256 ?? '-' }}</div>
+        <div style="margin-bottom:12px;">
+            <div class="muted" style="font-size:12px; margin-bottom:6px;">Hex + ASCII</div>
+            <pre class="raw-pre" style="max-height:360px; white-space:pre; overflow:auto;">{{ implode("\n", $lines) }}</pre>
+        </div>
+        <details class="raw">
+            <summary>Raw payload (base64)</summary>
+            <pre class="raw-pre">{{ $rawBase64 }}</pre>
+        </details>
+    @else
+        <p class="muted" style="margin:0;">Raw payload record is missing for this job.</p>
+    @endif
 </div>
 <script>
 (() => {

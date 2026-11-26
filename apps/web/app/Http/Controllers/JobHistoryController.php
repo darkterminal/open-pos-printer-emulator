@@ -78,6 +78,9 @@ class JobHistoryController extends Controller
             ]);
         }
 
+        $rawBase64 = $job->rawPayload?->content_base64;
+        $rawBytes = $rawBase64 ? base64_decode($rawBase64, true) : null;
+
         return Inertia::render('Jobs/Show', [
             'job' => [
                 'id' => $job->id,
@@ -95,7 +98,10 @@ class JobHistoryController extends Controller
                 'warnings_count' => $job->warnings_count,
                 'render_model' => $job->render_model_json ?? ['lines' => [], 'actions' => [], 'width_dots' => 576],
                 'commands' => $job->commands_json ?? [],
-                'raw_base64' => $job->rawPayload?->payload_base64,
+                'raw_base64' => $rawBase64,
+                'raw_sha256' => $job->rawPayload?->content_sha256 ?? $job->checksum_sha256,
+                'raw_hex_dump' => $this->hexDump($rawBytes),
+                'raw_truncated' => is_string($rawBytes) && strlen($rawBytes) > 65536,
                 'listener' => $job->listener?->only(['name', 'external_id']),
             ],
         ]);
@@ -189,5 +195,50 @@ class JobHistoryController extends Controller
             'correlation_id' => $job->correlation_id,
             'received_at' => optional($job->received_at)->toIso8601String(),
         ];
+    }
+
+    /**
+     * Build a classic hex+ASCII dump for raw payload inspection.
+     *
+     * @return list<string>
+     */
+    private function hexDump(?string $bytes, int $maxBytes = 65536): array
+    {
+        if (! is_string($bytes) || $bytes === '') {
+            return [];
+        }
+
+        $slice = substr($bytes, 0, $maxBytes);
+        $len = strlen($slice);
+        $lines = [];
+
+        for ($offset = 0; $offset < $len; $offset += 16) {
+            $chunk = substr($slice, $offset, 16);
+            $hexParts = [];
+            $ascii = '';
+            $chunkLen = strlen($chunk);
+
+            for ($i = 0; $i < 16; $i++) {
+                if ($i < $chunkLen) {
+                    $byte = ord($chunk[$i]);
+                    $hexParts[] = sprintf('%02X', $byte);
+                    $ascii .= ($byte >= 32 && $byte <= 126) ? $chunk[$i] : '.';
+                } else {
+                    $hexParts[] = '  ';
+                    $ascii .= ' ';
+                }
+                if ($i === 7) {
+                    $hexParts[] = '';
+                }
+            }
+
+            $lines[] = sprintf('%08X  %s  |%s|', $offset, implode(' ', $hexParts), $ascii);
+        }
+
+        if (strlen($bytes) > $maxBytes) {
+            $lines[] = sprintf('... truncated, showing first %d bytes of %d ...', $maxBytes, strlen($bytes));
+        }
+
+        return $lines;
     }
 }

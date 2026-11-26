@@ -98,6 +98,9 @@ class JobDetailTest extends TestCase
         $response->assertSee('ESC_a');
         $response->assertSee('idle_timeout_finalize');
         $response->assertSee('job_detail_1');
+        $response->assertSee('Raw Data Viewer');
+        $response->assertSee('Hex + ASCII');
+        $response->assertSee('1B 40');
     }
 
     public function test_job_detail_inertia_page_renders_props(): void
@@ -113,5 +116,8 @@ class JobDetailTest extends TestCase
         $page = is_array($page) ? $page : json_decode((string) $page, true);
         $this->assertSame('Jobs/Show', $page['component'] ?? null);
         $this->assertSame('job_detail_1', $page['props']['job']['external_id'] ?? null);
+        $this->assertNotEmpty($page['props']['job']['raw_hex_dump'] ?? []);
+        $this->assertStringContainsString('|', $page['props']['job']['raw_hex_dump'][0] ?? '');
+        $this->assertSame(str_repeat('a', 64), $page['props']['job']['raw_sha256'] ?? null);
     }
 }

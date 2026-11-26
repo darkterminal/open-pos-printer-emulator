@@ -35,6 +35,8 @@ type Job = {
   commands?: Command[];
   raw_base64?: string | null;
   raw_sha256?: string | null;
+  raw_hex_dump?: string[];
+  raw_truncated?: boolean;
 };
 
 function RasterCanvas({ raster }: { raster: Raster }) {
@@ -235,9 +237,42 @@ export default function JobShow({ job }: { job: Job }) {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Raw Payload (base64)</CardTitle></CardHeader>
-        <CardContent>
-          <pre className="max-h-72 overflow-auto rounded-md bg-muted/30 p-3 font-mono text-xs whitespace-pre-wrap break-all">{job.raw_base64 ?? '-'}</pre>
+        <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+          <CardTitle>Raw Data Viewer</CardTitle>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (job.raw_base64) void navigator.clipboard.writeText(job.raw_base64);
+              }}
+              disabled={!job.raw_base64}
+            >
+              Copy base64
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const dump = (job.raw_hex_dump ?? []).join('\n');
+                if (dump) void navigator.clipboard.writeText(dump);
+              }}
+              disabled={!job.raw_hex_dump?.length}
+            >
+              Copy hex dump
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <div className="mb-2 text-sm font-medium">Hex + ASCII</div>
+            <pre className="max-h-80 overflow-auto rounded-md bg-muted/30 p-3 font-mono text-xs leading-5 whitespace-pre">{job.raw_hex_dump?.length ? job.raw_hex_dump.join('\n') : 'No raw payload stored.'}</pre>
+            {job.raw_truncated && <p className="mt-2 text-xs text-amber-600">Hex dump dipotong untuk performa UI; base64 lengkap tetap tersedia di bawah.</p>}
+          </div>
+          <details className="rounded-md border bg-muted/10 p-3">
+            <summary className="cursor-pointer text-sm font-medium">Raw payload (base64)</summary>
+            <pre className="mt-3 max-h-64 overflow-auto rounded-md bg-muted/30 p-3 font-mono text-xs whitespace-pre-wrap break-all">{job.raw_base64 ?? '-'}</pre>
+          </details>
         </CardContent>
       </Card>
     </AppShell>
