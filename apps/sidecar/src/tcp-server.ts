@@ -4,6 +4,7 @@ import { ulid } from 'ulid';
 import { config } from './config.js';
 import { logger } from './logger.js';
 import { postJob } from './laravel-client.js';
+import { parseEscPos } from './parser.js';
 import type { ConnectionStatus, JobPayload } from './types.js';
 
 export interface TcpServerHandle {
@@ -38,6 +39,11 @@ export function createTcpServer(): TcpServerHandle {
 
       const rawBuffer = Buffer.concat(chunks);
       const completedAt = new Date().toISOString();
+      const parsed = parseEscPos(rawBuffer, 576);
+      if (status === 'idle_timeout') parsed.warnings = [...new Set([...parsed.warnings, 'idle_timeout_finalize'])];
+      if (status === 'max_size_exceeded') parsed.warnings = [...new Set([...parsed.warnings, 'max_size_exceeded'])];
+      if (status === 'socket_error') parsed.warnings = [...new Set([...parsed.warnings, 'socket_error'])];
+
       const payload: JobPayload = {
         schema_version: '1.0',
         correlation_id: correlationId,
@@ -53,11 +59,11 @@ export function createTcpServer(): TcpServerHandle {
           sha256: crypto.createHash('sha256').update(rawBuffer).digest('hex'),
         },
         parse: {
-          status: rawBuffer.length > 0 ? 'partial' : 'parse_error',
+          status: rawBuffer.length === 0 ? 'parse_error' : parsed.status,
           profile: 'generic-escpos',
-          warnings: status === 'idle_timeout' ? ['idle_timeout_finalize'] : [],
-          commands: [],
-          render_model: { width_dots: 576, lines: [], actions: [] },
+          warnings: parsed.warnings,
+          commands: parsed.commands,
+          render_model: parsed.render_model,
         },
       };
 
