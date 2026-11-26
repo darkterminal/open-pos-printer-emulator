@@ -16,4 +16,5 @@ Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth')-
 Route::middleware('auth')->group(function (): void {
     Route::get('/jobs', [JobHistoryController::class, 'index'])->name('jobs.index');
     Route::get('/jobs/feed', [JobHistoryController::class, 'feed'])->name('jobs.feed');
+    Route::get('/jobs/{job}', [JobHistoryController::class, 'show'])->name('jobs.show');
 });

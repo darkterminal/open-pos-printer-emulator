@@ -86,6 +86,14 @@ printf "\x1B\x40Hello ESC/POS\n\x1D\x56\x00" | nc 127.0.0.1 9100
 
 Ekspektasi Sprint 1: job tercatat di log sidecar dan/atau tersimpan di database, lalu tampil di halaman riwayat job.
 
+## Fitur Saat Ini
+
+- TCP listener `9100` di sidecar Node.js, finalize via idle timeout / client close.
+- Parser ESC/POS subset: `ESC @`, align, bold, underline, text size, feed, cut, text + line feed.
+- Ingest internal ke Laravel dengan token, validasi payload, idempotency `external_id`, dan batas ukuran payload.
+- Riwayat job real-time (`/jobs`) via Reverb/Echo dengan polling fallback.
+- Detail job (`/jobs/{id}`): receipt preview dari `render_model`, warnings, command inspector, metadata, dan raw payload base64.
+
 ## Pengembangan
 
 Gunakan `Makefile` untuk task umum:
@@ -97,6 +105,8 @@ make logs
 make test
 make lint
 ```
+
+> Catatan test: `phpunit.xml` memaksa `APP_ENV=testing` dan SQLite `:memory:` lewat `<server>`/`<env>` agar test di container tidak menyentuh database PostgreSQL dev. `tests/TestCase.php` juga punya guard yang menolak test jika koneksi bukan SQLite in-memory.
 
 ## Dokumentasi Internal
 

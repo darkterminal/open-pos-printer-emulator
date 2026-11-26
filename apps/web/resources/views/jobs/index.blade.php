@@ -24,7 +24,7 @@
             <tbody id="jobs-body">
             @forelse ($jobs as $job)
                 <tr data-job-id="{{ $job->id }}">
-                    <td>#{{ $job->id }}<div class="muted">{{ $job->external_id }}</div></td>
+                    <td><a href="{{ route('jobs.show', $job) }}">#{{ $job->id }}</a><div class="muted">{{ $job->external_id }}</div></td>
                     <td>{{ optional($job->received_at)->toIso8601String() }}</td>
                     <td>{{ $job->listener?->name ?? '-' }}<div class="muted">{{ $job->listener?->external_id }}</div></td>
                     <td>{{ $job->source_ip }}{{ $job->source_port ? ':' . $job->source_port : '' }}</td>
@@ -79,7 +79,7 @@
         const listener = job.listener || {};
         const warnings = job.warnings_count > 0 ? `<div class="muted">${job.warnings_count} warning(s)</div>` : '';
         tr.innerHTML = `
-            <td>#${esc(job.id)}<div class="muted">${esc(job.external_id)}</div></td>
+            <td><a href="/jobs/${esc(job.id)}">#${esc(job.id)}</a><div class="muted">${esc(job.external_id)}</div></td>
             <td>${esc(job.received_at || '-')}</td>
             <td>${esc(listener.name || '-')}<div class="muted">${esc(listener.external_id || '')}</div></td>
             <td>${esc(source)}</td>

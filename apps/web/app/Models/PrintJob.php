@@ -24,6 +24,7 @@ class PrintJob extends Model
         'warnings_count',
         'error_message',
         'render_model_json',
+        'commands_json',
         'warnings_json',
         'checksum_sha256',
     ];
@@ -34,6 +35,7 @@ class PrintJob extends Model
             'received_at' => 'datetime',
             'completed_at' => 'datetime',
             'render_model_json' => 'array',
+            'commands_json' => 'array',
             'warnings_json' => 'array',
         ];
     }

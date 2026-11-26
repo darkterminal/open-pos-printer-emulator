@@ -48,6 +48,7 @@ services:
 
   reverb:
     image: escpos-emulator-web:dev
+    restart: unless-stopped
     env_file:
       - ./apps/web/.env
     environment:

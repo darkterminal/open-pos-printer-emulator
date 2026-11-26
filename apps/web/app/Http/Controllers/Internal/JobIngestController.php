@@ -118,6 +118,7 @@ class JobIngestController extends Controller
                 'warnings_count' => count($validated['parse']['warnings'] ?? []),
                 'error_message' => $validated['parse']['status'] === 'parse_error' ? 'Parse error reported by sidecar' : null,
                 'render_model_json' => $validated['parse']['render_model'] ?? null,
+                'commands_json' => $validated['parse']['commands'] ?? [],
                 'warnings_json' => $validated['parse']['warnings'] ?? [],
                 'checksum_sha256' => $validated['raw']['sha256'],
             ]);

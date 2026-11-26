@@ -63,7 +63,9 @@ class InternalJobIngestTest extends TestCase
                 'status' => 'partial',
                 'profile' => 'generic-escpos',
                 'warnings' => ['idle_timeout_finalize'],
-                'commands' => [],
+                'commands' => [
+                    ['offset' => 0, 'hex' => '1b 40', 'name' => 'ESC_@'],
+                ],
                 'render_model' => ['width_dots' => 576, 'lines' => [], 'actions' => []],
             ],
         ];
@@ -114,6 +116,7 @@ class InternalJobIngestTest extends TestCase
         $job = PrintJob::query()->firstOrFail();
         $this->assertSame('partial', $job->status);
         $this->assertSame(1, $job->warnings_count);
+        $this->assertSame('ESC_@', $job->commands_json[0]['name']);
     }
 
     public function test_rejects_unknown_listener(): void

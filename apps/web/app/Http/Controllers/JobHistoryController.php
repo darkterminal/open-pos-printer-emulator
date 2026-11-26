@@ -22,6 +22,15 @@ class JobHistoryController extends Controller
         ]);
     }
 
+    public function show(PrintJob $job): View
+    {
+        $job->load(['listener:id,name,external_id', 'rawPayload']);
+
+        return view('jobs.show', [
+            'job' => $job,
+        ]);
+    }
+
     public function feed(Request $request): JsonResponse
     {
         $afterId = max(0, (int) $request->integer('after_id', 0));

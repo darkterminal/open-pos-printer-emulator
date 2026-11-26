@@ -8,6 +8,14 @@ export interface ParsedCommand {
   raw_preview?: string;
 }
 
+export interface RenderSegment {
+  text: string;
+  bold: boolean;
+  underline: boolean;
+  width: 1 | 2;
+  height: 1 | 2;
+}
+
 export interface RenderLine {
   text: string;
   align: 'left' | 'center' | 'right';
@@ -15,6 +23,7 @@ export interface RenderLine {
   underline: boolean;
   width: 1 | 2;
   height: 1 | 2;
+  segments?: RenderSegment[];
 }
 
 export interface RenderModel {
@@ -45,14 +54,12 @@ function previewByte(b: number): string {
   return `0x${b.toString(16).padStart(2, '0')}`;
 }
 
-function pushLine(lines: RenderLine[], text: string, state: Omit<RenderLine, 'text'>) {
-  const normalized = text.replace(/\r/g, '');
-  const parts = normalized.split('\n');
-  for (let i = 0; i < parts.length; i += 1) {
-    const part = parts[i];
-    if (part.length === 0 && i === parts.length - 1) continue;
-    lines.push({ text: part, ...state });
-  }
+interface TextState {
+  align: RenderLine['align'];
+  bold: boolean;
+  underline: boolean;
+  width: 1 | 2;
+  height: 1 | 2;
 }
 
 export function parseEscPos(buffer: Buffer, widthDots = 576): ParseResult {
@@ -61,21 +68,51 @@ export function parseEscPos(buffer: Buffer, widthDots = 576): ParseResult {
   const lines: RenderLine[] = [];
   const actions: string[] = [];
 
-  const state = {
-    align: 'left' as RenderLine['align'],
+  const state: TextState = {
+    align: 'left',
     bold: false,
     underline: false,
-    width: 1 as 1 | 2,
-    height: 1 as 1 | 2,
+    width: 1,
+    height: 1,
   };
 
-  let textBuf = '';
+  let segments: RenderSegment[] = [];
   let unknownCount = 0;
 
-  const flushText = () => {
-    if (!textBuf) return;
-    pushLine(lines, textBuf, state);
-    textBuf = '';
+  const appendText = (text: string) => {
+    const last = segments[segments.length - 1];
+    if (
+      last &&
+      last.bold === state.bold &&
+      last.underline === state.underline &&
+      last.width === state.width &&
+      last.height === state.height
+    ) {
+      last.text += text;
+      return;
+    }
+    segments.push({
+      text,
+      bold: state.bold,
+      underline: state.underline,
+      width: state.width,
+      height: state.height,
+    });
+  };
+
+  const finalizeLine = () => {
+    const text = segments.map((s) => s.text).join('');
+    const first = segments.find((s) => s.text.length > 0) ?? segments[0];
+    lines.push({
+      text,
+      align: state.align,
+      bold: first?.bold ?? state.bold,
+      underline: first?.underline ?? state.underline,
+      width: first?.width ?? state.width,
+      height: first?.height ?? state.height,
+      segments: segments.length > 0 ? segments : undefined,
+    });
+    segments = [];
   };
 
   for (let i = 0; i < buffer.length; i += 1) {
@@ -91,7 +128,6 @@ export function parseEscPos(buffer: Buffer, widthDots = 576): ParseResult {
       }
 
       if (c1 === 0x40) {
-        flushText();
         commands.push({ offset, hex: toHex([b, c1]), name: 'ESC_@', args: { description: 'Initialize printer' } });
         state.align = 'left';
         state.bold = false;
@@ -106,7 +142,6 @@ export function parseEscPos(buffer: Buffer, widthDots = 576): ParseResult {
       if (c1 === 0x45) {
         const n = buffer[i + 2];
         if (n === undefined) { warnings.push('truncated_esc_E'); break; }
-        flushText();
         state.bold = (n & 0x01) === 1;
         commands.push({ offset, hex: toHex([b, c1, n]), name: 'ESC_E', args: { bold: state.bold } });
         i += 2;
@@ -116,7 +151,6 @@ export function parseEscPos(buffer: Buffer, widthDots = 576): ParseResult {
       if (c1 === 0x2d) {
         const n = buffer[i + 2];
         if (n === undefined) { warnings.push('truncated_esc_-'); break; }
-        flushText();
         state.underline = n !== 0;
         commands.push({ offset, hex: toHex([b, c1, n]), name: 'ESC_-', args: { underline: state.underline, value: n } });
         i += 2;
@@ -126,7 +160,6 @@ export function parseEscPos(buffer: Buffer, widthDots = 576): ParseResult {
       if (c1 === 0x61) {
         const n = buffer[i + 2];
         if (n === undefined) { warnings.push('truncated_esc_a'); break; }
-        flushText();
         state.align = n === 1 ? 'center' : n === 2 ? 'right' : 'left';
         commands.push({ offset, hex: toHex([b, c1, n]), name: 'ESC_a', args: { align: state.align, value: n } });
         i += 2;
@@ -136,7 +169,7 @@ export function parseEscPos(buffer: Buffer, widthDots = 576): ParseResult {
       if (c1 === 0x64) {
         const n = buffer[i + 2];
         if (n === undefined) { warnings.push('truncated_esc_d'); break; }
-        flushText();
+        finalizeLine();
         commands.push({ offset, hex: toHex([b, c1, n]), name: 'ESC_d', args: { lines: n } });
         for (let l = 0; l < n; l += 1) lines.push({ text: '', ...state });
         i += 2;
@@ -160,7 +193,6 @@ export function parseEscPos(buffer: Buffer, widthDots = 576): ParseResult {
       if (c1 === 0x56) {
         const m = buffer[i + 2];
         if (m === undefined) { warnings.push('truncated_gs_V'); break; }
-        flushText();
         commands.push({ offset, hex: toHex([b, c1, m]), name: 'GS_V', args: { mode: m, cut: true } });
         actions.push('cut');
         i += 2;
@@ -170,7 +202,6 @@ export function parseEscPos(buffer: Buffer, widthDots = 576): ParseResult {
       if (c1 === 0x21) {
         const n = buffer[i + 2];
         if (n === undefined) { warnings.push('truncated_gs_!'); break; }
-        flushText();
         state.width = ((n >> 4) & 0x07) >= 1 ? 2 : 1;
         state.height = (n & 0x07) >= 1 ? 2 : 1;
         commands.push({ offset, hex: toHex([b, c1, n]), name: 'GS_!', args: { width: state.width, height: state.height, value: n } });
@@ -185,8 +216,7 @@ export function parseEscPos(buffer: Buffer, widthDots = 576): ParseResult {
     }
 
     if (b === 0x0a) {
-      textBuf += '\n';
-      flushText();
+      finalizeLine();
       commands.push({ offset, hex: '0a', name: 'LF' });
       continue;
     }
@@ -197,7 +227,7 @@ export function parseEscPos(buffer: Buffer, widthDots = 576): ParseResult {
     }
 
     if (PRINTABLE.test(String.fromCharCode(b))) {
-      textBuf += String.fromCharCode(b);
+      appendText(String.fromCharCode(b));
       continue;
     }
 
@@ -205,13 +235,20 @@ export function parseEscPos(buffer: Buffer, widthDots = 576): ParseResult {
     commands.push({ offset, hex: toHex([b]), name: 'BYTE_UNKNOWN', raw_preview: previewByte(b) });
   }
 
-  flushText();
+  if (segments.length > 0) finalizeLine();
 
   if (unknownCount > 0) warnings.push(`unknown_commands:${unknownCount}`);
 
-  const meaningful = commands.some((c) => !['CR', 'LF'].includes(c.name)) || lines.some((l) => l.text.length > 0);
+  const meaningful =
+    commands.some((c) => !['CR', 'LF'].includes(c.name)) || lines.some((l) => l.text.length > 0);
   if (buffer.length > 0 && !meaningful) warnings.push('no_recognized_commands');
-  const status: ParseStatus = buffer.length === 0 ? 'parse_error' : warnings.length > 0 || unknownCount > 0 ? 'partial' : meaningful ? 'ok' : 'partial';
+  const status: ParseStatus = buffer.length === 0
+    ? 'parse_error'
+    : warnings.length > 0 || unknownCount > 0
+      ? 'partial'
+      : meaningful
+        ? 'ok'
+        : 'partial';
 
   return {
     status,

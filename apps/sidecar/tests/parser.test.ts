@@ -36,4 +36,18 @@ describe('parseEscPos', () => {
     expect(res.status).toBe('partial');
     expect(res.warnings.join(',')).toContain('unknown_commands');
   });
+
+  it('keeps style segments without creating phantom blank lines', () => {
+    const buf = Buffer.from([
+      0x1b, 0x45, 0x01, // bold on
+      ...Buffer.from('BOLD'),
+      0x1b, 0x45, 0x00, // bold off before line feed
+      0x0a,
+      ...Buffer.from('plain\n'),
+    ]);
+    const res = parseEscPos(buf);
+    expect(res.render_model.lines.map((l) => l.text)).toEqual(['BOLD', 'plain']);
+    expect(res.render_model.lines[0].segments?.[0].bold).toBe(true);
+    expect(res.render_model.lines[0].segments?.[0].text).toBe('BOLD');
+  });
 });
