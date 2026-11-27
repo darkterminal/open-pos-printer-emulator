@@ -88,7 +88,7 @@ export default function ListenersIndex({ listeners, profiles = [] }: { listeners
   return (
     <AppShell
       title="Listeners"
-      description="Kelola TCP listener, profile printer, dan fault simulation untuk menguji perilaku POS client."
+      description="Manage TCP listeners, printer profiles, and fault simulation to test POS client behavior."
       actions={<Button variant="outline" className="bg-background/40" onClick={() => router.post('/listeners/sync', {}, { preserveScroll: true })}>Sync from sidecar</Button>}
     >
       <Head title="Listeners - Open POS Printer Emulator" />
@@ -96,7 +96,7 @@ export default function ListenersIndex({ listeners, profiles = [] }: { listeners
       {Object.keys(errors).length > 0 && <Alert variant="destructive"><AlertDescription><div className="space-y-1">{Object.values(errors).map((err, i) => <div key={i}>{err}</div>)}</div></AlertDescription></Alert>}
 
       <Card className="border-border/70 bg-card/70 mb-4">
-        <CardHeader><CardTitle className="text-base">Add Listener</CardTitle><p className="text-sm text-muted-foreground">Buat port TCP baru. Gunakan host `0.0.0.0` agar bisa diakses dari network/container.</p></CardHeader>
+        <CardHeader><CardTitle className="text-base">Add Listener</CardTitle><p className="text-sm text-muted-foreground">Create a new TCP port. Use host `0.0.0.0` to make it accessible from the network/container.</p></CardHeader>
         <CardContent>
           <form onSubmit={create} className="grid gap-4 md:grid-cols-5 md:items-end">
             <div className="space-y-2"><Label htmlFor="name">Name</Label><Input id="name" className="bg-background/50" value={createForm.data.name} onChange={(e) => createForm.setData('name', e.target.value)} required placeholder="Warehouse 9101" /></div>
@@ -109,7 +109,7 @@ export default function ListenersIndex({ listeners, profiles = [] }: { listeners
       </Card>
 
       <Card className="border-border/70 bg-card/70">
-        <CardHeader className="flex-row items-center justify-between space-y-0"><div><CardTitle className="text-base">Active Listeners</CardTitle><p className="text-sm text-muted-foreground">Status DB, status sidecar, heartbeat, dan fault simulation.</p></div><Badge variant="outline">{listeners.length} listeners</Badge></CardHeader>
+        <CardHeader className="flex-row items-center justify-between space-y-0"><div><CardTitle className="text-base">Active Listeners</CardTitle><p className="text-sm text-muted-foreground">Database status, sidecar status, heartbeat, and fault simulation.</p></div><Badge variant="outline">{listeners.length} listeners</Badge></CardHeader>
         <CardContent>
           <div className="overflow-x-auto rounded-xl border bg-background/20">
             <Table>
@@ -130,7 +130,7 @@ export default function ListenersIndex({ listeners, profiles = [] }: { listeners
                     </TableRow>
                   );
                 })}
-                {listeners.length === 0 && <TableRow><TableCell colSpan={8}><EmptyState title="No listeners configured" description="Buat listener pertama untuk mulai menerima koneksi ESC/POS TCP." /></TableCell></TableRow>}
+                {listeners.length === 0 && <TableRow><TableCell colSpan={8}><EmptyState title="No listeners configured" description="Create your first listener to start receiving ESC/POS TCP connections." /></TableCell></TableRow>}
               </TableBody>
             </Table>
           </div>

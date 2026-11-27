@@ -53,18 +53,18 @@ export default function PrinterProfilesIndex({ profiles }: { profiles: PrinterPr
   const [editingId, setEditingId] = useState<number | null>(null);
 
   return (
-    <AppShell title="Printer Profiles" description="Definisikan karakteristik printer (paper, DPI, chars/line, code page, image limits) agar preview dan parsing lebih akurat.">
+    <AppShell title="Printer Profiles" description="Define printer characteristics (paper, DPI, chars/line, code page, image limits) so preview and parsing are more accurate.">
       <Head title="Printer Profiles - Open POS Printer Emulator" />
       {flash && <Alert className="border-emerald-500/30 bg-emerald-500/5 text-emerald-400"><AlertDescription>{flash}</AlertDescription></Alert>}
       {Object.keys(errors).length > 0 && <Alert variant="destructive"><AlertDescription>{Object.values(errors).map((e, i) => <div key={i}>{e}</div>)}</AlertDescription></Alert>}
 
       <Card className="border-border/70 bg-card/70 mb-4">
-        <CardHeader><CardTitle className="text-base">Add Printer Profile</CardTitle><p className="text-sm text-muted-foreground">Buat preset untuk tipe printer/POS yang sering kamu uji.</p></CardHeader>
+        <CardHeader><CardTitle className="text-base">Add Printer Profile</CardTitle><p className="text-sm text-muted-foreground">Create a preset for the printer/POS types you test frequently.</p></CardHeader>
         <CardContent><ProfileForm /></CardContent>
       </Card>
 
       <Card className="border-border/70 bg-card/70">
-        <CardHeader className="flex-row items-center justify-between space-y-0"><div><CardTitle className="text-base">Printer Profiles</CardTitle><p className="text-sm text-muted-foreground">Builtin profile read-only; custom profile bisa diedit/dihapus jika tidak dipakai listener.</p></div><Badge variant="outline">{profiles.length} profiles</Badge></CardHeader>
+        <CardHeader className="flex-row items-center justify-between space-y-0"><div><CardTitle className="text-base">Printer Profiles</CardTitle><p className="text-sm text-muted-foreground">Built-in profiles are read-only; custom profiles can be edited/deleted when not used by a listener.</p></div><Badge variant="outline">{profiles.length} profiles</Badge></CardHeader>
         <CardContent>
           <div className="overflow-x-auto rounded-xl border bg-background/20">
             <Table>
@@ -89,7 +89,7 @@ export default function PrinterProfilesIndex({ profiles }: { profiles: PrinterPr
                     </TableCell>
                   </TableRow>
                 ))}
-                {profiles.length === 0 && <TableRow><TableCell colSpan={7}><EmptyState title="No printer profiles" description="Buat profile printer untuk listener kamu." /></TableCell></TableRow>}
+                {profiles.length === 0 && <TableRow><TableCell colSpan={7}><EmptyState title="No printer profiles" description="Create a printer profile for your listener." /></TableCell></TableRow>}
               </TableBody>
             </Table>
           </div>

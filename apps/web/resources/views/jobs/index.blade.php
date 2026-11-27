@@ -23,7 +23,7 @@
             <h2 style="margin:0; font-size:18px;">Receipt Preview</h2>
             <span class="muted" id="preview-job-id"></span>
         </div>
-        <p class="muted" style="margin-top:0; font-size:13px;">Klik baris job untuk mengganti preview receipt.</p>
+        <p class="muted" style="margin-top:0; font-size:13px;">Click a job row to change the receipt preview.</p>
         <div class="receipt-wrap"><div class="receipt" id="receipt-preview"><div class="head">ESC/POS PREVIEW</div><div class="line" style="text-align:center;color:#777;">No job selected</div></div></div>
         <div class="meta-mini" id="preview-meta"></div>
         <div style="margin-top:12px;"><a id="preview-open-detail" class="btn btn-secondary" href="#" style="display:none; width:100%; text-align:center;">Open full detail</a></div>
@@ -33,7 +33,7 @@
         <div style="display:flex; justify-content:space-between; align-items:end; gap:16px; margin-bottom:16px; flex-wrap:wrap;">
             <div>
                 <h1 style="margin:0;">Job History</h1>
-                <p class="muted" style="margin:8px 0 0;">Klik baris job untuk melihat receipt preview di kiri. Live via Reverb dengan polling fallback.</p>
+                <p class="muted" style="margin:8px 0 0;">Click a job row to view the receipt preview on the left. Live via Reverb with polling fallback.</p>
             </div>
             <div class="muted">Total: <span id="jobs-total">{{ $jobs->total() }}</span> <span id="jobs-live-state" style="margin-left:8px;"></span></div>
         </div>

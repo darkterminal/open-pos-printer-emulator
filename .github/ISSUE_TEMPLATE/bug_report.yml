@@ -1,19 +1,19 @@
 name: Bug report
-description: Laporkan perilaku yang salah atau error
+description: Report incorrect behavior or an error
 labels: ["bug"]
 body:
   - type: textarea
     id: description
     attributes:
-      label: Deskripsi bug
-      description: Jelaskan apa yang terjadi dan apa yang Anda harapkan.
+      label: Bug description
+      description: Explain what happened and what you expected.
     validations:
       required: true
   - type: textarea
     id: reproduction
     attributes:
-      label: Langkah reproduksi
-      description: Sertakan langkah, payload ESC/POS, atau script `nc`.
+      label: Reproduction steps
+      description: Include steps, ESC/POS payload, or an `nc` script.
       placeholder: |
         1. ...
         2. ...
@@ -23,10 +23,10 @@ body:
   - type: textarea
     id: logs
     attributes:
-      label: Log / bukti
-      description: Tempel log sidecar/web, screenshot, atau payload relevan.
+      label: Logs / evidence
+      description: Paste sidecar/web logs, screenshots, or relevant payloads.
   - type: input
     id: version
     attributes:
-      label: Versi / commit
+      label: Version / commit
       placeholder: main@<sha> or v0.1.0

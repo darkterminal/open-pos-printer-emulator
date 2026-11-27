@@ -1,18 +1,18 @@
-## Ringkasan
+## Summary
 
 - 
 
-## Alasan
+## Reason
 
 - 
 
-## Cara Uji
+## Test Steps
 
 - [ ] 
 
 ## Checklist
 
-- [ ] Tes ditambah/diperbarui
-- [ ] Dokumentasi diperbarui (jika perlu)
-- [ ] Tidak ada secret/credential/`.env`
-- [ ] Screenshot/bukti untuk perubahan UI
+- [ ] Tests added/updated
+- [ ] Documentation updated (if needed)
+- [ ] No secrets/credentials/`.env`
+- [ ] Screenshot/evidence for UI changes

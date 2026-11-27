@@ -1,20 +1,20 @@
 # Open POS Printer Emulator
 
-Open POS Printer Emulator adalah aplikasi web open source self-hosted untuk menguji integrasi ESC/POS tanpa printer fisik. Aplikasi POS dapat mengirim byte stream ESC/POS melalui TCP/IP mentah ke port yang dapat dikonfigurasi (default `9100`), lalu pengembang dapat melihat live preview struk, command inspector, raw hex/ASCII, dan riwayat job di browser.
+Open POS Printer Emulator is a self-hosted open-source web application for testing ESC/POS integrations without physical printers. A POS application can send an ESC/POS byte stream over raw TCP/IP to a configurable port (default `9100`), and developers can inspect a live receipt preview, command inspector, raw hex/ASCII, and job history in the browser.
 
-> Status: **MVP in progress**. Repo private sampai siap dipublikasikan.
+> Status: **MVP in progress**. The repo stays private until it is ready to be published.
 
-## Tujuan MVP
+## MVP Goals
 
-- TCP listener ESC/POS (default 9100)
-- Parsing subset perintah ESC/POS
-- Live receipt preview real-time
-- Command inspector dan raw data viewer
+- TCP ESC/POS listener (default 9100)
+- ESC/POS command subset parsing
+- Real-time live receipt preview
+- Command inspector and raw data viewer
 - Job history per listener
 - Printer profiles
 - Fault simulation
-- Export PDF/gambar
-- Autentikasi pengguna sederhana
+- PDF/image export
+- Simple user authentication
 
 ## Stack
 
@@ -22,21 +22,21 @@ Open POS Printer Emulator adalah aplikasi web open source self-hosted untuk meng
 - **Frontend:** Inertia.js v2 + React 19 + TypeScript + shadcn/ui (default), Blade fallback (`?ui=blade`)
 - **Real-time:** Laravel Reverb + Laravel Echo
 - **TCP Listener & Parser:** Node.js TypeScript sidecar
-- **Database:** PostgreSQL (dev/prod container), SQLite `:memory:` untuk test
-- **Orchestration:** Kiri Compose (Docker fallback kompatibilitas)
+- **Database:** PostgreSQL (dev/prod container), SQLite `:memory:` for tests
+- **Orchestration:** Kiri Compose (Docker fallback for compatibility)
 
-## Struktur Repositori
+## Repository Structure
 
 ```text
 .
 ├── apps/
 │   ├── web/                  # Laravel + Inertia React + shadcn/ui (Blade fallback)
 │   └── sidecar/              # Node.js TCP listener + ESC/POS parser
-├── docker/                   # Konfigurasi container/runtime
+├── docker/                   # Container/runtime configuration
 ├── .github/workflows/        # CI (lint/test) + E2E smoke workflow
-├── .internal/                # Dokumen internal planning (gitignored)
+├── .internal/                # Internal planning docs (gitignored)
 ├── compose.yaml              # Kiri Compose
-├── compose.ci.yaml           # CI override untuk Docker Compose E2E
+├── compose.ci.yaml           # CI override for Docker Compose E2E
 └── Makefile                  # Task wrapper
 ```
 
@@ -52,42 +52,42 @@ kiri compose exec web php artisan key:generate
 kiri compose exec web php artisan migrate --seed
 ```
 
-Endpoints lokal:
+Local endpoints:
 - Web: `http://localhost:8080`
 - Reverb: `ws://localhost:8081`
 - TCP listener: `localhost:9100`
 - Sidecar health: `http://localhost:3001/health`
 
-## Verifikasi Cepat
+## Quick Verification
 
 ```bash
 printf "\x1B\x40Hello ESC/POS\n\x1D\x56\x00" | nc 127.0.0.1 9100
 ```
 
-Buka `/jobs` (Inertia default) atau `/jobs?ui=blade` untuk fallback Blade.
+Open `/jobs` (Inertia default) or `/jobs?ui=blade` for the Blade fallback.
 
-## Fitur Saat Ini
+## Current Features
 
-- **TCP ingest:** listener 9100 + finalize idle timeout/client close; raw payload tetap disimpan meski parsing gagal.
-- **Parser ESC/POS subset:** init, align, bold/underline, text size, line spacing/feed, HT/ESC D tabs, ESC $/\ positioning, cut, cash drawer, barcode/QR/image placeholders, DLE EOT status, codepages CP437/CP850/CP858/CP1252/ISO-8859-1.
-- **Raster/image:** `GS v 0` dan `ESC *` (mode 8-dot/24-dot yang didukung, mode lain diberi warning) dirender sebagai preview; `GS ( L` raster subset didukung best-effort dengan fallback placeholder/warning untuk varian tidak didukung.
-- **Ingest internal Laravel:** token auth, payload validation, idempotent `external_id`, checksum SHA-256.
-- **Realtime Jobs:** `/jobs` via Reverb/Echo + polling fallback `/jobs/feed`. Blade fallback juga punya live update filter-aware.
-- **Job history UX:** filter/search/pagination/date range (`q,status,listener_id,date_from,date_to,per_page,page`) di Inertia dan Blade.
-- **Job detail:** receipt preview, command inspector, warnings, raw base64, export Print/Save PDF dan client-side PNG/text.
-- **Listener management:** CRUD/edit/delete listener, sidecar status, heartbeat, last error, fault simulation toggles (paper_out, cover_open, cutter_error, offline), manual sync.
-- **Sidecar control:** ensure/start/stop/update faults. Laravel internal listener status ingest + bootstrap endpoints. `sidecar:sync-listeners` berjalan saat startup web dan terjadwal tiap menit.
-- **Printer Profiles MVP:** CRUD profile (builtin tidak editable/deletable; profile yang dipakai listener tidak deletable).
-- **Auth/ownership scoping:** listener/job/printer profile query dan mutasi dibatasi ke user terautentikasi; builtin printer profile tetap readable.
-- **Ops hardening:** index `print_jobs` untuk query history/feed, command `jobs:prune --days= --dry-run`, env `PRINT_JOBS_RETENTION_DAYS` (default 30), schedule prune harian 03:30.
-- **UI default:** Inertia React + shadcn/ui di `/jobs`, `/jobs/{id}`, `/listeners`, `/printer-profiles`. Blade fallback tersedia via `?ui=blade`.
+- **TCP ingest:** listener 9100 + finalize on idle timeout/client close; raw payload is preserved even when parsing fails.
+- **ESC/POS subset parser:** init, align, bold/underline, text size, line spacing/feed, HT/ESC D tabs, ESC $/ positioning, cut, cash drawer, barcode/QR/image placeholders, DLE EOT status, codepages CP437/CP850/CP858/CP1252/ISO-8859-1.
+- **Raster/image:** `GS v 0` and `ESC *` (supported 8-dot/24-dot modes; other modes emit warnings) are rendered as previews; `GS ( L` raster subset is supported best-effort with placeholder/warning fallback for unsupported variants.
+- **Internal Laravel ingest:** token auth, payload validation, idempotent `external_id`, SHA-256 checksum.
+- **Realtime Jobs:** `/jobs` via Reverb/Echo + `/jobs/feed` polling fallback. Blade fallback also has filter-aware live updates.
+- **Job history UX:** filter/search/pagination/date range (`q,status,listener_id,date_from,date_to,per_page,page`) in Inertia and Blade.
+- **Job detail:** receipt preview, command inspector, warnings, raw base64, Print/Save PDF and client-side PNG/text export.
+- **Listener management:** CRUD/edit/delete listeners, sidecar status, heartbeat, last error, fault simulation toggles (paper_out, cover_open, cutter_error, offline), manual sync.
+- **Sidecar control:** ensure/start/stop/update faults. Laravel internal listener status ingest + bootstrap endpoints. `sidecar:sync-listeners` runs on web startup and is scheduled every minute.
+- **Printer Profiles MVP:** CRUD profiles (built-in profiles are not editable/deletable; profiles used by listeners are not deletable).
+- **Auth/ownership scoping:** listener/job/printer profile queries and mutations are limited to the authenticated user; built-in printer profiles remain readable.
+- **Ops hardening:** `print_jobs` indexes for history/feed queries, `jobs:prune --days= --dry-run` command, `PRINT_JOBS_RETENTION_DAYS` env (default 30), daily prune schedule at 03:30.
+- **Default UI:** Inertia React + shadcn/ui on `/jobs`, `/jobs/{id}`, `/listeners`, `/printer-profiles`. Blade fallback available via `?ui=blade`.
 
 ## Testing & Checks
 
 ```bash
 make test
 make lint
-make e2e   # butuh stack aktif di localhost:8080
+make e2e   # requires an active stack at localhost:8080
 ```
 
 Manual checks:
@@ -100,7 +100,7 @@ kiri compose exec sidecar npm run lint
 kiri compose exec web npm run build
 ```
 
-E2E Playwright smoke (committed):
+Committed Playwright E2E smoke:
 
 ```bash
 cd apps/web
@@ -109,7 +109,7 @@ npx playwright install chromium
 E2E_BASE_URL=http://localhost:8080 npx playwright test
 ```
 
-Smoke mencakup: login admin, jobs page, printer profile create, TCP ingest, job detail export controls. Gunakan DB/stack ephemeral untuk CI; smoke lokal dapat membuat data test.
+Smoke covers: admin login, jobs page, printer profile create, TCP ingest, job detail export controls. Use an ephemeral DB/stack for CI; local smoke may create test data.
 
 ## CI
 
@@ -118,14 +118,14 @@ Smoke mencakup: login admin, jobs page, printer profile create, TCP ingest, job 
 
 ## Troubleshooting
 
-- **Kiri BuildKit mirror timeout**: jika build gagal karena mirror lokal, gunakan builder `docker-container` tanpa mirror, build `--load`, lalu `kiri compose up -d --no-build`.
-- **Reverb tidak live**: cek `kiri compose ps` untuk service `reverb` dan port `8081`; UI jobs punya polling fallback.
-- **Blade fallback stale**: gunakan `/jobs?ui=blade`; fallback punya live update filter-aware, tapi tetap verifikasi dengan polling/fetch feed.
-- **Test menghapus data dev**: jangan override `phpunit.xml` env; test harus jalan di SQLite `:memory:`.
-- **Sidecar status stale**: jalankan `kiri compose exec web php artisan sidecar:sync-listeners`.
-- **Retention/prune**: cek `PRINT_JOBS_RETENTION_DAYS`; dry-run aman dengan `kiri compose exec web php artisan jobs:prune --dry-run`.
-- **E2E flakiness**: pastikan web/reverb/sidecar/db sehat, port 8080/8081/9100/3001 free, dan gunakan trace `apps/web/test-results` saat gagal.
+- **Kiri BuildKit mirror timeout**: if a build fails due to a local mirror, use a `docker-container` builder without a mirror, build with `--load`, then `kiri compose up -d --no-build`.
+- **Reverb not live**: check `kiri compose ps` for the `reverb` service and port `8081`; the jobs UI has a polling fallback.
+- **Blade fallback stale**: use `/jobs?ui=blade`; the fallback has filter-aware live updates, but still verify with polling/feed fetch.
+- **Tests delete dev data**: do not override `phpunit.xml` env; tests must run on SQLite `:memory:`.
+- **Sidecar status stale**: run `kiri compose exec web php artisan sidecar:sync-listeners`.
+- **Retention/prune**: check `PRINT_JOBS_RETENTION_DAYS`; dry-run safely with `kiri compose exec web php artisan jobs:prune --dry-run`.
+- **E2E flakiness**: ensure web/reverb/sidecar/db are healthy, ports 8080/8081/9100/3001 are free, and use the trace in `apps/web/test-results` on failure.
 
-## Lisensi
+## License
 
 [Apache License 2.0](LICENSE)

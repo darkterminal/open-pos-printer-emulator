@@ -1,10 +1,10 @@
 # AGENTS.md — Open POS Printer Emulator
 
-Panduan operasional untuk agent yang bekerja di repositori ini. Ikuti instruksi ini sebelum mengubah kode.
+Operational guide for agents working in this repository. Follow these instructions before changing code.
 
-## Gambaran Proyek
+## Project Overview
 
-Open POS Printer Emulator adalah aplikasi web open source self-hosted untuk menguji integrasi ESC/POS tanpa printer fisik. POS client mengirim byte stream ESC/POS via RAW TCP ke listener (default `9100`), sidecar Node.js memproses payload, Laravel menyimpan dan menyiarkan event, dan UI React/Inertia menampilkan preview/inspector/history.
+Open POS Printer Emulator is a self-hosted open-source web application for testing ESC/POS integrations without physical printers. A POS client sends an ESC/POS byte stream via raw TCP to a listener (default `9100`), the Node.js sidecar processes the payload, Laravel stores and broadcasts events, and the React/Inertia UI displays preview/inspector/history.
 
 ## Stack
 
@@ -12,65 +12,65 @@ Open POS Printer Emulator adalah aplikasi web open source self-hosted untuk meng
 - **Frontend:** Inertia.js v2 + React 19 + TypeScript + Tailwind CSS + shadcn/ui
 - **Real-time:** Laravel Reverb + Laravel Echo
 - **TCP Listener/Parser:** Node.js TypeScript sidecar (`apps/sidecar`)
-- **Database:** PostgreSQL (dev/prod container), SQLite opsional untuk test tertentu
+- **Database:** PostgreSQL (dev/prod container), SQLite optional for certain tests
 - **Orchestration:** Kiri Compose (default)
 
-## Struktur Penting
+## Key Structure
 
 - `apps/web/` — Laravel app
 - `apps/sidecar/` — Node.js TCP listener + ESC/POS parser
-- `docker/` — Dockerfile untuk service
+- `docker/` — container service Dockerfiles
 - `compose.yaml` — Kiri Compose stack
-- `.internal/` — dokumen planning internal; **excluded dari git**, jangan commit
-- `.internal/architecture/` — arsitektur dan ADR
-- `.internal/api/internal-sidecar-contract.md` — kontrak internal sidecar <-> Laravel
+- `.internal/` — internal planning documents; **git-excluded**, do not commit
+- `.internal/architecture/` — architecture and ADRs
+- `.internal/api/internal-sidecar-contract.md` — internal sidecar <-> Laravel contract
 
-## Aturan Runtime: Kiri First
+## Runtime Rule: Kiri First
 
-Gunakan **Kiri** sebagai runtime container default. Docker **bukan** deprecated, tapi hanya fallback eksplisit.
+Use **Kiri** as the default container runtime. Docker is **not** deprecated, but only an explicit fallback.
 
-- Gunakan `kiri compose ...`, bukan `docker compose ...` untuk workflow normal.
-- Gunakan `kiri compose up -d --build`, `kiri compose ps`, `kiri compose logs -f`, `kiri compose exec ...`.
-- Jangan menulis ulang Compose/Dockerfile hanya karena ganti runtime.
-- Jangan beralih runtime diam-diam saat command gagal; jika perlu Docker fallback, sebutkan alasannya eksplisit.
-- Jangan jalankan perintah destruktif (`down -v`, prune, volume/image delete) tanpa alasan jelas dan otorisasi jika berdampak.
+- Use `kiri compose ...`, not `docker compose ...`, for normal workflows.
+- Use `kiri compose up -d --build`, `kiri compose ps`, `kiri compose logs -f`, `kiri compose exec ...`.
+- Do not rewrite Compose/Dockerfiles just because the runtime changes.
+- Do not silently switch runtimes when a command fails; if Docker fallback is needed, state the reason explicitly.
+- Do not run destructive commands (`down -v`, prune, volume/image delete) without a clear reason and authorization when impactful.
 
-## Aturan Menulis File: WAJIB Pakai Write/Edit Tools
+## File Writing Rule: MUST Use Write/Edit Tools
 
-**Jangan pernah menggunakan shell heredoc** untuk menulis file (`cat <<EOF`, `<<'EOF'`, redirect heredoc serupa). Ini pernah menyebabkan korupsi file (`File not found:`) secara diam-diam.
+**Never use shell heredocs** to write files (`cat <<EOF`, `<<'EOF'`, or similar heredoc redirects). This has previously caused silent file corruption (`File not found:`).
 
-- Buat/overwrite file dengan tool `write`.
-- Perubahan parsial dengan tool `edit`.
-- Shell hanya untuk eksekusi, inspeksi, git, test, build, dan verifikasi.
-- Setelah menulis file penting, verifikasi dengan `wc -c` dan baca cuplikan (`head`/`sed`) sebelum file dipakai downstream.
-- Jika file mencurigakan kecil atau berisi `File not found:`, anggap corrupt dan tulis ulang via `write` tool.
+- Create/overwrite files with the `write` tool.
+- Make partial changes with the `edit` tool.
+- Use shell only for execution, inspection, git, tests, builds, and verification.
+- After writing an important file, verify with `wc -c` and read a snippet (`head`/`sed`) before using it downstream.
+- If a file looks suspiciously small or contains `File not found:`, treat it as corrupt and rewrite it via the `write` tool.
 
 ## E2E Testing: Playwright MCP
 
-Gunakan **Playwright MCP** untuk E2E testing alur browser. Jangan mengandalkan asumsi visual tanpa verifikasi.
+Use **Playwright MCP** for browser E2E testing. Do not rely on visual assumptions without verification.
 
-- Gunakan Playwright MCP untuk skenario UI kritis: login, job masuk, live preview, command inspector, raw viewer, history, fault simulation.
-- Viewport default: **1440 x 775** (sesuai environment browser).
-- Pastikan service berjalan via Kiri sebelum E2E: `kiri compose ps`.
-- Untuk verifikasi cepat end-to-end, kirim payload TCP:
+- Use Playwright MCP for critical UI scenarios: login, job ingress, live preview, command inspector, raw viewer, history, fault simulation.
+- Default viewport: **1440 x 775** (per browser environment).
+- Ensure services are running via Kiri before E2E: `kiri compose ps`.
+- For quick end-to-end verification, send a TCP payload:
 
 ```bash
 printf "\x1B\x40Hello ESC/POS\n\x1D\x56\x00" | nc 127.0.0.1 9100
 ```
 
-- Tangkap bukti saat relevan (screenshot/log) dan laporkan hasil aktual, bukan asumsi.
+- Capture evidence when relevant (screenshots/logs) and report actual results, not assumptions.
 
-## Konvensi Pengembangan
+## Development Conventions
 
-- **Branching:** trunk-based / GitHub Flow; branch pendek dari `main`.
+- **Branching:** trunk-based / GitHub Flow; short branches from `main`.
 - **Commit:** Conventional Commits (`feat(scope): ...`, `fix(scope): ...`).
-- **Kontrak internal:** patuhi `.internal/api/internal-sidecar-contract.md`; sertakan `schema_version`, `correlation_id`, ISO 8601 UTC.
-- **Idempotency:** job ingest harus idempotent berdasarkan `external_id`.
-- **Keamanan:** validasi `X-Sidecar-Token` untuk endpoint internal; jangan log secret/token.
-- **Kegagalan:** raw payload tetap disimpan meski parsing gagal; jangan buang data debugging.
-- **Naming DB:** gunakan `print_jobs` untuk job cetak agar tidak bentrok dengan tabel queue Laravel `jobs`.
+- **Internal contract:** follow `.internal/api/internal-sidecar-contract.md`; include `schema_version`, `correlation_id`, ISO 8601 UTC.
+- **Idempotency:** job ingest must be idempotent based on `external_id`.
+- **Security:** validate `X-Sidecar-Token` for internal endpoints; do not log secrets/tokens.
+- **Failures:** keep raw payloads even when parsing fails; do not discard debugging data.
+- **DB naming:** use `print_jobs` for print jobs to avoid conflict with Laravel's queue `jobs` table.
 
-## Perintah Umum
+## Common Commands
 
 ```bash
 make up          # kiri compose up -d --build
@@ -81,10 +81,10 @@ make test        # web + sidecar tests
 make lint        # pint + eslint/tsc checks
 ```
 
-## Checklist Sebelum Handoff
+## Pre-Handoff Checklist
 
-- Perubahan fokus dan sesuai scope.
-- Tidak ada secret/token di kode/log.
-- Tes relevan dijalankan; laporkan hasil nyata.
-- Dokumen internal diperbarui jika kontrak/arsitektur berubah.
-- Tidak ada file ditulis lewat shell heredoc.
+- Changes are focused and in scope.
+- No secrets/tokens in code/logs.
+- Relevant tests were run; report actual results.
+- Internal docs updated if contracts/architecture changed.
+- No files were written via shell heredoc.

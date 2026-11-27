@@ -1,13 +1,13 @@
 # Contributing to Open POS Printer Emulator
 
-Terima kasih sudah tertarik berkontribusi. Proyek ini masih tahap awal (Sprint 1/Foundation), jadi kontribusi kecil yang rapi sangat membantu.
+Thank you for your interest in contributing. This project is still in an early stage (Sprint 1/Foundation), so small, clean contributions are very helpful.
 
 ## Ground Rules
 
-- Gunakan **Kiri** sebagai runtime container default (`kiri compose ...`). Docker hanya fallback eksplisit.
-- **Jangan pakai shell heredoc** untuk menulis file; gunakan tool/editor yang aman. Setelah menulis file penting, verifikasi isinya.
-- Ikuti Conventional Commits: `feat(scope): ...`, `fix(scope): ...`, `docs: ...`, dll.
-- Jaga PR tetap kecil dan fokus. Sertakan alasan perubahan dan cara verifikasi.
+- Use **Kiri** as the default container runtime (`kiri compose ...`). Docker is only an explicit fallback.
+- **Do not use shell heredocs** to write files; use a safe tool/editor. After writing an important file, verify its contents.
+- Follow Conventional Commits: `feat(scope): ...`, `fix(scope): ...`, `docs: ...`, etc.
+- Keep PRs small and focused. Include the reason for the change and how to verify it.
 
 ## Local Setup
 
@@ -30,9 +30,9 @@ printf "\x1B\x40Hello ESC/POS\n\x1D\x56\x00" | nc 127.0.0.1 9100
 
 ## Development Workflow
 
-1. Buat branch dari `main`: `feat/...`, `fix/...`, `docs/...`.
-2. Kerjakan perubahan fokus.
-3. Jalankan tes/lint yang relevan:
+1. Create a branch from `main`: `feat/...`, `fix/...`, `docs/...`.
+2. Work on a focused change.
+3. Run relevant tests/lint:
 
 ```bash
 kiri compose exec web php artisan test
@@ -41,21 +41,21 @@ kiri compose exec sidecar npm run lint
 kiri compose exec sidecar npm test
 ```
 
-4. Buka PR dengan deskripsi, alasan, cara uji, dan screenshot untuk perubahan UI.
+4. Open a PR with description, rationale, test steps, and screenshots for UI changes.
 
 ## Pull Request Checklist
 
-- [ ] Scope jelas dan terkait issue.
-- [ ] Tes ditambah/diperbarui jika relevan.
-- [ ] Tidak ada secret/token/`.env` yang ter-commit.
-- [ ] Dokumentasi diperbarui jika kontrak/behavior berubah.
-- [ ] Perubahan UI disertakan bukti (screenshot/Playwright MCP).
+- [ ] Scope is clear and related to an issue.
+- [ ] Tests added/updated when relevant.
+- [ ] No secrets/tokens/`.env` committed.
+- [ ] Documentation updated if contracts/behavior changed.
+- [ ] UI changes include evidence (screenshot/Playwright MCP).
 
 ## Reporting Bugs / Security
 
-- Bug: buka GitHub Issue dengan langkah reproduksi, payload/contoh ESC/POS bila ada, dan log relevan.
-- Security issue sensitif: jangan buka issue publik dulu; hubungi maintainer melalui kanal privat yang akan dicantumkan. (Sementara, gunakan GitHub Security Advisory jika tersedia.)
+- Bug: open a GitHub Issue with reproduction steps, ESC/POS payload/sample if available, and relevant logs.
+- Sensitive security issue: do not open a public issue first; contact the maintainer through a private channel to be listed. (For now, use GitHub Security Advisory if available.)
 
 ## Code of Conduct
 
-Dengan berpartisipasi, Anda diharapkan menjaga interaksi yang profesional dan respektif. Detail akan ditambahkan di `CODE_OF_CONDUCT.md`.
+By participating, you are expected to maintain professional and respectful interactions. Details will be added in `CODE_OF_CONDUCT.md`.

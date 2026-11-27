@@ -40,7 +40,7 @@ export default function JobShow({ job }: { job: Job }) {
   return (
     <AppShell
       title={`Job #${job.id}`}
-      description="Inspect receipt preview, parsed commands, warnings, and raw payload untuk debugging integrasi ESC/POS."
+      description="Inspect receipt preview, parsed commands, warnings, and raw payload for ESC/POS integration debugging."
       actions={<>
         <Link href="/jobs" className="inline-flex"><Button variant="outline" className="bg-background/40">Back to jobs</Button></Link>
         <Button variant="outline" className="bg-background/40" onClick={() => window.print()}>Print / Save PDF</Button>
@@ -143,7 +143,7 @@ export default function JobShow({ job }: { job: Job }) {
           <div>
             <div className="mb-2 text-sm font-medium">Hex + ASCII</div>
             <pre className="max-h-80 overflow-auto rounded-xl border bg-background/30 p-3 font-mono text-xs leading-5 whitespace-pre">{job.raw_hex_dump?.length ? job.raw_hex_dump.join('\n') : 'No raw payload stored.'}</pre>
-            {job.raw_truncated && <p className="mt-2 text-xs text-amber-500">Hex dump dipotong untuk performa UI; base64 lengkap tetap tersedia di bawah.</p>}
+            {job.raw_truncated && <p className="mt-2 text-xs text-amber-500">Hex dump is truncated for UI performance; full base64 remains available below.</p>}
           </div>
           <details className="rounded-xl border bg-background/20 p-3">
             <summary className="cursor-pointer text-sm font-medium">Raw payload (base64)</summary>

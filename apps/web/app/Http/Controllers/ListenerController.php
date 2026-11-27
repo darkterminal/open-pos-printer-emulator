@@ -106,7 +106,7 @@ class ListenerController extends Controller
 
             $msg = $e->getMessage();
             if (str_contains($msg, 'EADDRINUSE') || str_contains($msg, 'address already in use')) {
-                $msg = "Port {$listener->port} on {$listener->host} is already in use. Pilih port lain atau hentikan proses yang memakai port tersebut.";
+                $msg = "Port {$listener->port} on {$listener->host} is already in use. Choose another port or stop the process using that port.";
             }
 
             return back()->withErrors(['sidecar' => 'Listener created but sidecar failed to start: '.$msg]);
@@ -181,7 +181,7 @@ class ListenerController extends Controller
 
             $msg = $e->getMessage();
             if (str_contains($msg, 'EADDRINUSE') || str_contains($msg, 'address already in use')) {
-                $msg = "Port {$newPort} on {$newHost} is already in use. Pilih port lain atau hentikan proses yang memakai port tersebut.";
+                $msg = "Port {$newPort} on {$newHost} is already in use. Choose another port or stop the process using that port.";
             }
 
             return back()->withErrors(['sidecar' => 'Listener updated but sidecar failed to restart: '.$msg]);

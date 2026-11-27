@@ -219,7 +219,7 @@ export default function JobsIndex({ jobs: initialJobs, listeners = [], filters: 
       <div className="flex shrink-0 items-end justify-between gap-3 border-b border-border/60 px-4 py-3 sm:px-6">
         <div>
           <h1 className="text-lg font-semibold tracking-tight">Jobs Workspace</h1>
-          <p className="text-xs text-muted-foreground">Pilih job di kiri, inspect receipt di tengah, dan baca detail teknis di kanan.</p>
+          <p className="text-xs text-muted-foreground">Select a job on the left, inspect the receipt in the center, and review technical details on the right.</p>
         </div>
         <div className="flex items-center gap-2"><ConnectionBadge state={connection} /><Badge variant="outline">{pagination?.total ?? jobs.length} jobs</Badge></div>
       </div>
@@ -269,7 +269,7 @@ export default function JobsIndex({ jobs: initialJobs, listeners = [], filters: 
                   </button>
                 );
               })}
-              {jobs.length === 0 && <EmptyState title="No jobs found" description="Sesuaikan filter atau kirim payload ESC/POS ke listener." />}
+              {jobs.length === 0 && <EmptyState title="No jobs found" description="Adjust filters or send an ESC/POS payload to a listener." />}
             </div>
             {pagination && pagination.current_page < pagination.last_page && (
               <div className="py-3 text-center">
@@ -284,17 +284,17 @@ export default function JobsIndex({ jobs: initialJobs, listeners = [], filters: 
             <div className="mb-4 flex w-full items-center justify-between gap-3">
               <div>
                 <div className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Receipt Preview</div>
-                <div className="text-sm text-muted-foreground">{selectedJob ? `Job #${selectedJob.id} · ${selectedJob.external_id}` : 'Pilih job untuk melihat receipt'}</div>
+                <div className="text-sm text-muted-foreground">{selectedJob ? `Job #${selectedJob.id} · ${selectedJob.external_id}` : 'Select a job to view the receipt'}</div>
               </div>
               {selectedJob && <Button variant="outline" size="sm" className="bg-background/40" onClick={() => window.print()}>Print / Save PDF</Button>}
             </div>
-            {selectedJob ? <div className="w-full max-w-[560px]"><ReceiptPreview job={selectedJob} /></div> : <EmptyState title="No preview" description="Belum ada job yang dipilih." />}
+            {selectedJob ? <div className="w-full max-w-[560px]"><ReceiptPreview job={selectedJob} /></div> : <EmptyState title="No preview" description="No job selected yet." />}
           </div>
         </section>
 
         <aside className="min-h-0 overflow-y-auto bg-card/20 p-4">
           {!selectedJob ? (
-            <EmptyState title="No job selected" description="Pilih job dari daftar kiri." />
+            <EmptyState title="No job selected" description="Select a job from the list on the left." />
           ) : (
             <div className="space-y-4">
               <Card className="border-border/70 bg-card/70">
