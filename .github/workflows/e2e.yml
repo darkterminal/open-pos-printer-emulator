@@ -37,9 +37,19 @@ jobs:
               'REVERB_HOST': 'localhost',
               'REVERB_PORT': '8081',
               'REVERB_SCHEME': 'http',
+              'SIDECAR_SHARED_TOKEN': 'ci-sidecar-token',
+              'LARAVEL_CONTROL_TOKEN': 'ci-laravel-token',
           }.items():
               s = re.sub(rf'^{k}=.*$', f'{k}={v}', s, flags=re.M)
           p.write_text(s)
+          sp = pathlib.Path('apps/sidecar/.env')
+          ss = sp.read_text()
+          for k, v in {
+              'SIDECAR_SHARED_TOKEN': 'ci-sidecar-token',
+              'LARAVEL_INTERNAL_URL': 'http://web:8080/api/internal/v1',
+          }.items():
+              ss = re.sub(rf'^{k}=.*$', f'{k}={v}', ss, flags=re.M)
+          sp.write_text(ss)
           PY
 
 
@@ -70,6 +80,14 @@ jobs:
           cat /tmp/web-login.html || true
           docker compose -f compose.yaml -f compose.ci.yaml logs --no-color web | tail -200 || true
           exit 1
+
+      - name: Wait for sidecar
+        run: |
+          for i in {1..60}; do
+            curl -fsS http://localhost:3001/health >/dev/null && break
+            sleep 2
+          done
+          curl -fsS http://localhost:3001/health >/dev/null
 
       - name: Install Playwright
         working-directory: apps/web
