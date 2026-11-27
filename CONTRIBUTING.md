@@ -4,7 +4,7 @@ Thank you for your interest in contributing. This project is still in an early s
 
 ## Ground Rules
 
-- Use **Kiri** as the default container runtime (`kiri compose ...`). Docker is only an explicit fallback.
+- You can use **Kiri** (default) or **Docker Compose** as the container runtime. Pick the engine you prefer via `make ... ENGINE=kiri|docker`.
 - **Do not use shell heredocs** to write files; use a safe tool/editor. After writing an important file, verify its contents.
 - Follow Conventional Commits: `feat(scope): ...`, `fix(scope): ...`, `docs: ...`, etc.
 - Keep PRs small and focused. Include the reason for the change and how to verify it.
@@ -14,7 +14,12 @@ Thank you for your interest in contributing. This project is still in an early s
 ```bash
 cp apps/web/.env.example apps/web/.env
 cp apps/sidecar/.env.example apps/sidecar/.env
-kiri compose up -d --build
+
+# Kiri (default) or Docker Compose
+make up
+# make up ENGINE=docker
+
+# Replace `kiri compose` with `docker compose` if using Docker
 kiri compose exec web php artisan key:generate
 kiri compose exec web php artisan migrate --seed
 ```
@@ -35,10 +40,9 @@ printf "\x1B\x40Hello ESC/POS\n\x1D\x56\x00" | nc 127.0.0.1 9100
 3. Run relevant tests/lint:
 
 ```bash
-kiri compose exec web php artisan test
-kiri compose exec web ./vendor/bin/pint --test
-kiri compose exec sidecar npm run lint
-kiri compose exec sidecar npm test
+make test
+make lint
+# Or with Docker: make test ENGINE=docker && make lint ENGINE=docker
 ```
 
 4. Open a PR with description, rationale, test steps, and screenshots for UI changes.

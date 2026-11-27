@@ -40,13 +40,25 @@ Open POS Printer Emulator is a self-hosted open-source web application for testi
 └── Makefile                  # Task wrapper
 ```
 
-## Quick Start (Kiri)
+## Quick Start
+
+Choose your container engine. Both Kiri and Docker Compose are supported.
 
 ```bash
 cp apps/web/.env.example apps/web/.env
 cp apps/sidecar/.env.example apps/sidecar/.env
 
-kiri compose up -d --build
+# Kiri (default)
+make up
+
+# Or Docker Compose
+make up ENGINE=docker
+```
+
+After services are up, install dependencies and initialize the app:
+
+```bash
+# Replace `kiri compose` with `docker compose` if using Docker
 kiri compose exec web composer install
 kiri compose exec web php artisan key:generate
 kiri compose exec web php artisan migrate --seed
@@ -85,12 +97,18 @@ Open `/jobs` (Inertia default) or `/jobs?ui=blade` for the Blade fallback.
 ## Testing & Checks
 
 ```bash
+# Kiri (default)
 make test
 make lint
+
+# Docker Compose
+make test ENGINE=docker
+make lint ENGINE=docker
+
 make e2e   # requires an active stack at localhost:8080
 ```
 
-Manual checks:
+Manual checks (replace `kiri compose` with `docker compose` if using Docker):
 
 ```bash
 kiri compose exec web php artisan test
@@ -118,12 +136,12 @@ Smoke covers: admin login, jobs page, printer profile create, TCP ingest, job de
 
 ## Troubleshooting
 
-- **Kiri BuildKit mirror timeout**: if a build fails due to a local mirror, use a `docker-container` builder without a mirror, build with `--load`, then `kiri compose up -d --no-build`.
-- **Reverb not live**: check `kiri compose ps` for the `reverb` service and port `8081`; the jobs UI has a polling fallback.
+- **Kiri BuildKit mirror timeout**: if a build fails due to a local mirror, use a `docker-container` builder without a mirror, build with `--load`, then `kiri compose up -d --no-build`. Docker Compose users are not affected by this Kiri-specific issue.
+- **Reverb not live**: check `make ps` (or `make ps ENGINE=docker`) for the `reverb` service and port `8081`; the jobs UI has a polling fallback.
 - **Blade fallback stale**: use `/jobs?ui=blade`; the fallback has filter-aware live updates, but still verify with polling/feed fetch.
 - **Tests delete dev data**: do not override `phpunit.xml` env; tests must run on SQLite `:memory:`.
-- **Sidecar status stale**: run `kiri compose exec web php artisan sidecar:sync-listeners`.
-- **Retention/prune**: check `PRINT_JOBS_RETENTION_DAYS`; dry-run safely with `kiri compose exec web php artisan jobs:prune --dry-run`.
+- **Sidecar status stale**: run `kiri compose exec web php artisan sidecar:sync-listeners` (or `docker compose exec ...`).
+- **Retention/prune**: check `PRINT_JOBS_RETENTION_DAYS`; dry-run safely with `kiri compose exec web php artisan jobs:prune --dry-run` (or `docker compose exec ...`).
 - **E2E flakiness**: ensure web/reverb/sidecar/db are healthy, ports 8080/8081/9100/3001 are free, and use the trace in `apps/web/test-results` on failure.
 
 ## License

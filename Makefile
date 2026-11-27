@@ -1,53 +1,62 @@
 .PHONY: help up down build logs ps restart test lint fmt e2e sidecar-test web-test web-lint sidecar-lint shell-web shell-sidecar
 
+# Container engine: kiri (default) or docker
+# Usage: make up ENGINE=docker
+ENGINE ?= kiri
+ifeq ($(ENGINE),docker)
+  COMPOSE = docker compose
+else
+  COMPOSE = kiri compose
+endif
+
 help:
 	@echo "Targets: up down build logs ps restart test lint fmt shell-web shell-sidecar"
+	@echo "Engine:   ENGINE=kiri|docker (default: kiri). Example: make up ENGINE=docker"
 
 up:
-	kiri compose up -d --build
+	$(COMPOSE) up -d --build
 
 down:
-	kiri compose down
+	$(COMPOSE) down
 
 build:
-	kiri compose build
+	$(COMPOSE) build
 
 logs:
-	kiri compose logs -f
+	$(COMPOSE) logs -f
 
 ps:
-	kiri compose ps
+	$(COMPOSE) ps
 
 restart:
-	kiri compose restart
+	$(COMPOSE) restart
 
 shell-web:
-	kiri compose exec web sh
+	$(COMPOSE) exec web sh
 
 shell-sidecar:
-	kiri compose exec sidecar sh
+	$(COMPOSE) exec sidecar sh
 
 web-test:
-	kiri compose exec web php artisan test
+	$(COMPOSE) exec web php artisan test
 
 sidecar-test:
-	kiri compose exec sidecar npm test
+	$(COMPOSE) exec sidecar npm test
 
 test: web-test sidecar-test
 
 web-lint:
-	kiri compose exec web ./vendor/bin/pint --test
-	kiri compose exec web npm run lint
+	$(COMPOSE) exec web ./vendor/bin/pint --test
+	$(COMPOSE) exec web npm run lint
 
 sidecar-lint:
-	kiri compose exec sidecar npm run lint
+	$(COMPOSE) exec sidecar npm run lint
 
 lint: web-lint sidecar-lint
 
 fmt:
-	kiri compose exec web ./vendor/bin/pint
-	kiri compose exec sidecar npm run format
+	$(COMPOSE) exec web ./vendor/bin/pint
+	$(COMPOSE) exec sidecar npm run format
 
 e2e:
 	cd apps/web && E2E_BASE_URL=http://localhost:8080 npx playwright test
-File not found: 

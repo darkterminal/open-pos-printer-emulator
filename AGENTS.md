@@ -25,14 +25,15 @@ Open POS Printer Emulator is a self-hosted open-source web application for testi
 - `.internal/architecture/` — architecture and ADRs
 - `.internal/api/internal-sidecar-contract.md` — internal sidecar <-> Laravel contract
 
-## Runtime Rule: Kiri First
+## Container Runtime: Kiri or Docker
 
-Use **Kiri** as the default container runtime. Docker is **not** deprecated, but only an explicit fallback.
+Contributors may choose their preferred container engine. Both are supported.
 
-- Use `kiri compose ...`, not `docker compose ...`, for normal workflows.
-- Use `kiri compose up -d --build`, `kiri compose ps`, `kiri compose logs -f`, `kiri compose exec ...`.
-- Do not rewrite Compose/Dockerfiles just because the runtime changes.
-- Do not silently switch runtimes when a command fails; if Docker fallback is needed, state the reason explicitly.
+- **Kiri** (default): `make up` or `make up ENGINE=kiri`
+- **Docker Compose**: `make up ENGINE=docker`
+- The `Makefile` `ENGINE` variable selects the runtime (`kiri compose` or `docker compose`). Pass `ENGINE=docker` to any make target.
+- Do not rewrite Compose/Dockerfiles for engine preference; keep them compatible with both.
+- Do not silently switch runtimes when a command fails; state the reason explicitly if fallback is needed.
 - Do not run destructive commands (`down -v`, prune, volume/image delete) without a clear reason and authorization when impactful.
 
 ## File Writing Rule: MUST Use Write/Edit Tools
