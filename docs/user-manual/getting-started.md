@@ -13,8 +13,6 @@ This page helps you get the emulator running on your machine. If you only want t
 - Ports available: `8080` (web), `8081` ([Reverb](https://reverb.laravel.com/)), `9100` (TCP listener), `3001` (sidecar), `5432` ([PostgreSQL](https://www.postgresql.org/))
 - `nc` (netcat) for the quick TCP smoke test (optional)
 
-> **Windows local mode (MVP):** if you don't want Docker/Kiri on Windows, see [Windows distribution target](windows-distribution.md) for the single-process `apps/windows-agent` MVP.
-
 ## 1. Prepare Environment Files
 
 ```bash
