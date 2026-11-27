@@ -13,7 +13,7 @@ use Inertia\Response as InertiaResponse;
 
 class JobHistoryController extends Controller
 {
-    public function index(Request $request): View|InertiaResponse
+    public function index(Request $request): View|InertiaResponse|JsonResponse
     {
         $validated = $request->validate([
             'q' => ['nullable', 'string', 'max:200'],
@@ -52,7 +52,7 @@ class JobHistoryController extends Controller
             ]);
         }
 
-        return Inertia::render('Jobs/Index', [
+        $payload = [
             'jobs' => $jobs->through(fn (PrintJob $job) => $this->jobSummary($job)),
             'listeners' => $listeners->map(fn (Listener $l) => $l->only(['id', 'name', 'external_id']))->values(),
             'filters' => $filters,
@@ -64,10 +64,16 @@ class JobHistoryController extends Controller
                 'from' => $jobs->firstItem(),
                 'to' => $jobs->lastItem(),
             ],
-        ]);
+        ];
+
+        if ($request->wantsJson()) {
+            return response()->json($payload);
+        }
+
+        return Inertia::render('Jobs/Index', $payload);
     }
 
-    public function show(Request $request, PrintJob $job): View|InertiaResponse
+    public function show(Request $request, PrintJob $job): View|InertiaResponse|JsonResponse
     {
         abort_unless($job->listener && $job->listener->user_id === $request->user()->id, 403);
         $job->load(['listener:id,name,external_id', 'rawPayload']);
@@ -80,8 +86,7 @@ class JobHistoryController extends Controller
 
         $rawBase64 = $job->rawPayload?->content_base64;
         $rawBytes = $rawBase64 ? base64_decode($rawBase64, true) : null;
-
-        return Inertia::render('Jobs/Show', [
+        $payload = [
             'job' => [
                 'id' => $job->id,
                 'external_id' => $job->external_id,
@@ -104,7 +109,13 @@ class JobHistoryController extends Controller
                 'raw_truncated' => is_string($rawBytes) && strlen($rawBytes) > 65536,
                 'listener' => $job->listener?->only(['name', 'external_id']),
             ],
-        ]);
+        ];
+
+        if ($request->wantsJson()) {
+            return response()->json($payload);
+        }
+
+        return Inertia::render('Jobs/Show', $payload);
     }
 
     public function feed(Request $request): JsonResponse
@@ -194,6 +205,7 @@ class JobHistoryController extends Controller
             'warnings_count' => $job->warnings_count,
             'correlation_id' => $job->correlation_id,
             'received_at' => optional($job->received_at)->toIso8601String(),
+            'render_model' => $job->render_model_json ?? ['width_dots' => 576, 'lines' => [], 'actions' => []],
         ];
     }
 

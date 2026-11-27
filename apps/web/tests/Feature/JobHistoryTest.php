@@ -40,6 +40,7 @@ class JobHistoryTest extends TestCase
         $jobs = $page['props']['jobs']['data'] ?? [];
         $this->assertCount(1, $jobs);
         $this->assertSame('job_alpha', $jobs[0]['external_id']);
+        $this->assertArrayHasKey('render_model', $jobs[0]);
     }
 
     public function test_jobs_feed_respects_filters_and_after_id(): void
