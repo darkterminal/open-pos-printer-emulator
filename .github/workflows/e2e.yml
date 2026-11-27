@@ -24,25 +24,47 @@ jobs:
         run: |
           cp apps/web/.env.example apps/web/.env
           cp apps/sidecar/.env.example apps/sidecar/.env
+          python3 - <<'PY'
+          import pathlib, re
+          p = pathlib.Path('apps/web/.env')
+          s = p.read_text()
+          for k, v in {
+              'CACHE_STORE': 'file',
+              'SESSION_DRIVER': 'file',
+              'QUEUE_CONNECTION': 'sync',
+              'BROADCAST_CONNECTION': 'reverb',
+              'APP_URL': 'http://localhost:8080',
+              'REVERB_HOST': 'localhost',
+              'REVERB_PORT': '8081',
+              'REVERB_SCHEME': 'http',
+          }.items():
+              s = re.sub(rf'^{k}=.*$', f'{k}={v}', s, flags=re.M)
+          p.write_text(s)
+          PY
+
 
       - name: Start stack
         run: docker compose -f compose.yaml -f compose.ci.yaml up -d --build
 
-      - name: Wait for services
+      - name: Setup Laravel
+        run: |
+          for i in {1..60}; do
+            docker compose -f compose.yaml -f compose.ci.yaml exec -T web php artisan --version >/dev/null 2>&1 && break
+            sleep 2
+          done
+          docker compose -f compose.yaml -f compose.ci.yaml exec -T web php artisan key:generate --force
+          docker compose -f compose.yaml -f compose.ci.yaml exec -T web php artisan migrate --force
+          docker compose -f compose.yaml -f compose.ci.yaml exec -T web php artisan db:seed --force
+          docker compose -f compose.yaml -f compose.ci.yaml exec -T web npm ci
+          docker compose -f compose.yaml -f compose.ci.yaml exec -T web npm run build
+
+      - name: Wait for web
         run: |
           for i in {1..60}; do
             curl -fsS http://localhost:8080/login >/dev/null && break
             sleep 2
           done
           curl -fsS http://localhost:8080/login >/dev/null
-
-      - name: Setup Laravel
-        run: |
-          docker compose -f compose.yaml -f compose.ci.yaml exec -T web php artisan key:generate --force
-          docker compose -f compose.yaml -f compose.ci.yaml exec -T web php artisan migrate --force
-          docker compose -f compose.yaml -f compose.ci.yaml exec -T web php artisan db:seed --force
-          docker compose -f compose.yaml -f compose.ci.yaml exec -T web npm ci
-          docker compose -f compose.yaml -f compose.ci.yaml exec -T web npm run build
 
       - name: Install Playwright
         working-directory: apps/web
