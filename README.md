@@ -1,5 +1,7 @@
 # Open POS Printer Emulator
 
+![Open POS Printer Emulator banner](art/oppe-banner.png)
+
 Open POS Printer Emulator is a self-hosted open-source web application for testing ESC/POS integrations without physical printers. A POS application can send an ESC/POS byte stream over raw TCP/IP to a configurable port (default `9100`), and developers can inspect a live receipt preview, command inspector, raw hex/ASCII, and job history in the browser.
 
 > **Development tool only.** Open POS Printer Emulator is intended for local development, QA, and integration testing. It is **not recommended for production deployment** or for exposing to untrusted networks.
