@@ -2,6 +2,15 @@
 
 ![Open POS Printer Emulator banner](art/oppe-banner.png)
 
+[![CI](https://github.com/darkterminal/open-pos-printer-emulator/actions/workflows/ci.yml/badge.svg)](https://github.com/darkterminal/open-pos-printer-emulator/actions/workflows/ci.yml)
+[![E2E](https://github.com/darkterminal/open-pos-printer-emulator/actions/workflows/e2e.yml/badge.svg)](https://github.com/darkterminal/open-pos-printer-emulator/actions/workflows/e2e.yml)
+[![Release](https://img.shields.io/github/v/release/darkterminal/open-pos-printer-emulator?label=release)](https://github.com/darkterminal/open-pos-printer-emulator/releases)
+[![License](https://img.shields.io/github/license/darkterminal/open-pos-printer-emulator)](LICENSE)
+[![GitHub Stars](https://img.shields.io/github/stars/darkterminal/open-pos-printer-emulator?style=flat)](https://github.com/darkterminal/open-pos-printer-emulator/stargazers)
+[![GitHub Issues](https://img.shields.io/github/issues/darkterminal/open-pos-printer-emulator)](https://github.com/darkterminal/open-pos-printer-emulator/issues)
+[![Downloads](https://img.shields.io/github/downloads/darkterminal/open-pos-printer-emulator/total?label=downloads)](https://github.com/darkterminal/open-pos-printer-emulator/releases)
+[![Sponsor](https://img.shields.io/badge/sponsor-GitHub%20Sponsors-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/darkterminal)
+
 Open POS Printer Emulator is a self-hosted open-source web application for testing ESC/POS integrations without physical printers. A POS application can send an ESC/POS byte stream over raw TCP/IP to a configurable port (default `9100`), and developers can inspect a live receipt preview, command inspector, raw hex/ASCII, and job history in the browser.
 
 > **Development tool only.** Open POS Printer Emulator is intended for local development, QA, and integration testing. It is **not recommended for production deployment** or for exposing to untrusted networks.
