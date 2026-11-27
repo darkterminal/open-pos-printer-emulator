@@ -38,7 +38,7 @@ function FaultForm({ listener }: { listener: Listener }) {
           <span className="capitalize">{key.replace('_', ' ')}</span>
         </label>
       ))}
-      <Button type="submit" variant="outline" size="sm" className="bg-background/40" disabled={form.processing}>{form.processing ? 'Saving...' : 'Apply'}</Button>
+      <Button type="submit" variant="outline" size="sm" className="" disabled={form.processing}>{form.processing ? 'Saving...' : 'Apply'}</Button>
     </form>
   );
 }
@@ -53,9 +53,9 @@ function EditListener({ listener, profiles }: { listener: Listener; profiles: Pr
   };
   return (
     <div className="space-y-2">
-      <Button type="button" variant="outline" size="sm" className="bg-background/40" onClick={() => setOpen(!open)}>{open ? 'Close' : 'Edit'}</Button>
+      <Button type="button" variant="outline" size="sm" className="" onClick={() => setOpen(!open)}>{open ? 'Close' : 'Edit'}</Button>
       {open && (
-        <form onSubmit={submit} className="grid min-w-56 gap-2 rounded-lg border bg-background/40 p-3">
+        <form onSubmit={submit} className="grid min-w-56 gap-2 rounded-lg border  p-3">
           <Input value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} placeholder="Name" required />
           <Input value={form.data.host} onChange={(e) => form.setData('host', e.target.value)} placeholder="Host" required />
           <Input type="number" min={1} max={65535} value={form.data.port} onChange={(e) => form.setData('port', e.target.value)} placeholder="Port" required />
@@ -89,26 +89,26 @@ export default function ListenersIndex({ listeners, profiles = [] }: { listeners
     <AppShell
       title="Listeners"
       description="Manage TCP listeners, printer profiles, and fault simulation to test POS client behavior."
-      actions={<Button variant="outline" className="bg-background/40" onClick={() => router.post('/listeners/sync', {}, { preserveScroll: true })}>Sync from sidecar</Button>}
+      actions={<Button variant="outline" className="" onClick={() => router.post('/listeners/sync', {}, { preserveScroll: true })}>Sync from sidecar</Button>}
     >
       <Head title="Listeners - Open POS Printer Emulator" />
-      {flash && <Alert className="border-emerald-500/30 bg-emerald-500/5 text-emerald-400"><AlertDescription>{flash}</AlertDescription></Alert>}
+      {flash && <Alert className="border-ok/40 bg-ok/10 text-ok"><AlertDescription>{flash}</AlertDescription></Alert>}
       {Object.keys(errors).length > 0 && <Alert variant="destructive"><AlertDescription><div className="space-y-1">{Object.values(errors).map((err, i) => <div key={i}>{err}</div>)}</div></AlertDescription></Alert>}
 
       <Card className="border-border/70 bg-card/70 mb-4">
         <CardHeader><CardTitle className="text-base">Add Listener</CardTitle><p className="text-sm text-muted-foreground">Create a new TCP port. Use host `0.0.0.0` to make it accessible from the network/container.</p></CardHeader>
         <CardContent>
           <form onSubmit={create} className="grid gap-4 md:grid-cols-5 md:items-end">
-            <div className="space-y-2"><Label htmlFor="name">Name</Label><Input id="name" className="bg-background/50" value={createForm.data.name} onChange={(e) => createForm.setData('name', e.target.value)} required placeholder="Warehouse 9101" /></div>
-            <div className="space-y-2"><Label htmlFor="host">Host</Label><Input id="host" className="bg-background/50" value={createForm.data.host} onChange={(e) => createForm.setData('host', e.target.value)} required /></div>
-            <div className="space-y-2"><Label htmlFor="port">Port</Label><Input id="port" className="bg-background/50" type="number" min={1} max={65535} value={createForm.data.port} onChange={(e) => createForm.setData('port', e.target.value)} required /></div>
-            <div className="space-y-2"><Label>Printer Profile</Label><Select value={createForm.data.printer_profile_id} onValueChange={(v) => createForm.setData('printer_profile_id', v)}><SelectTrigger className="bg-background/50"><SelectValue placeholder="(none)" /></SelectTrigger><SelectContent><SelectItem value="none">(none)</SelectItem>{profiles.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>)}</SelectContent></Select></div>
+            <div className="space-y-2"><Label htmlFor="name">Name</Label><Input id="name" className="" value={createForm.data.name} onChange={(e) => createForm.setData('name', e.target.value)} required placeholder="Warehouse 9101" /></div>
+            <div className="space-y-2"><Label htmlFor="host">Host</Label><Input id="host" className="" value={createForm.data.host} onChange={(e) => createForm.setData('host', e.target.value)} required /></div>
+            <div className="space-y-2"><Label htmlFor="port">Port</Label><Input id="port" className="" type="number" min={1} max={65535} value={createForm.data.port} onChange={(e) => createForm.setData('port', e.target.value)} required /></div>
+            <div className="space-y-2"><Label>Printer Profile</Label><Select value={createForm.data.printer_profile_id} onValueChange={(v) => createForm.setData('printer_profile_id', v)}><SelectTrigger className=""><SelectValue placeholder="(none)" /></SelectTrigger><SelectContent><SelectItem value="none">(none)</SelectItem>{profiles.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>)}</SelectContent></Select></div>
             <Button type="submit" disabled={createForm.processing}>{createForm.processing ? 'Creating...' : 'Create & Start'}</Button>
           </form>
         </CardContent>
       </Card>
 
-      <Card className="border-border/70 bg-card/70">
+      <Card>
         <CardHeader className="flex-row items-center justify-between space-y-0"><div><CardTitle className="text-base">Active Listeners</CardTitle><p className="text-sm text-muted-foreground">Database status, sidecar status, heartbeat, and fault simulation.</p></div><Badge variant="outline">{listeners.length} listeners</Badge></CardHeader>
         <CardContent>
           <div className="overflow-x-auto rounded-xl border bg-background/20">

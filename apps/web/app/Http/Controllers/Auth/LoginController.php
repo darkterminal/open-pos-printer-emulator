@@ -7,13 +7,19 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\Response;
 
 class LoginController extends Controller
 {
-    public function show(): View|RedirectResponse
+    public function show(Request $request): View|RedirectResponse|Response
     {
         if (Auth::check()) {
             return redirect()->route('jobs.index');
+        }
+
+        if ($request->header('X-Inertia')) {
+            return Inertia::location(route('login'));
         }
 
         return view('auth.login');
@@ -37,11 +43,15 @@ class LoginController extends Controller
         ])->onlyInput('email');
     }
 
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request): Response
     {
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        if ($request->header('X-Inertia')) {
+            return Inertia::location(route('login'));
+        }
 
         return redirect()->route('login');
     }

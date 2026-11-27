@@ -42,8 +42,8 @@ type Pagination = { current_page: number; last_page: number; per_page: number; t
 type ConnectionState = 'connecting' | 'live' | 'polling';
 
 function ConnectionBadge({ state }: { state: ConnectionState }) {
-  if (state === 'live') return <Badge className="border-emerald-500/20 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/15">Live</Badge>;
-  if (state === 'polling') return <Badge className="border-amber-500/20 bg-amber-500/15 text-amber-400 hover:bg-amber-500/15">Polling</Badge>;
+  if (state === 'live') return <Badge className="bg-ok/15 text-ok border-ok/30">Live</Badge>;
+  if (state === 'polling') return <Badge className="bg-signal/15 text-signal border-signal/30">Polling</Badge>;
   return <Badge variant="secondary">Connecting</Badge>;
 }
 
@@ -214,33 +214,34 @@ export default function JobsIndex({ jobs: initialJobs, listeners = [], filters: 
   const selectedJob = jobs.find((j) => j.id === selectedId) ?? jobs[0] ?? null;
 
   return (
-    <AppShell fluid noPadding className="flex h-[calc(100vh-56px)] flex-col">
+    <AppShell fluid noPadding className="flex h-[calc(100vh-57px)] flex-col">
       <Head title="Jobs - Open POS Printer Emulator" />
-      <div className="flex shrink-0 items-end justify-between gap-3 border-b border-border/60 px-4 py-3 sm:px-6">
+      <div className="flex shrink-0 items-end justify-between gap-3 border-b border-border bg-background px-4 py-3 sm:px-6">
         <div>
+          <p className="font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-primary/80">// live stream</p>
           <h1 className="text-lg font-semibold tracking-tight">Jobs Workspace</h1>
           <p className="text-xs text-muted-foreground">Select a job on the left, inspect the receipt in the center, and review technical details on the right.</p>
         </div>
         <div className="flex items-center gap-2"><ConnectionBadge state={connection} /><Badge variant="outline">{pagination?.total ?? jobs.length} jobs</Badge></div>
       </div>
       <div className="grid min-h-0 flex-1 grid-cols-1 xl:grid-cols-[360px_minmax(0,1fr)_400px]">
-        <aside className="flex min-h-0 flex-col border-b border-border/60 bg-card/30 xl:border-b-0 xl:border-r">
-          <div className="border-b border-border/60 p-3">
+        <aside className="flex min-h-0 flex-col border-b border-border bg-card xl:border-b-0 xl:border-r">
+          <div className="border-b border-border p-3">
             <form onSubmit={submitFilters} className="space-y-2">
-              <Input value={form.q} onChange={(e) => setForm({ ...form, q: e.target.value })} placeholder="Search external/correlation/IP" className="h-9 bg-background/50" />
+              <Input value={form.q} onChange={(e) => setForm({ ...form, q: e.target.value })} placeholder="Search external/correlation/IP" className="h-9" />
               <div className="grid grid-cols-2 gap-2">
                 <Select value={form.status || '__all__'} onValueChange={(v) => setForm({ ...form, status: v === '__all__' ? '' : v })}>
-                  <SelectTrigger className="h-9 bg-background/50 w-full"><SelectValue placeholder="Status" /></SelectTrigger>
+                  <SelectTrigger className="h-9 w-full"><SelectValue placeholder="Status" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__all__">All statuses</SelectItem><SelectItem value="parsed">parsed</SelectItem><SelectItem value="partial">partial</SelectItem><SelectItem value="parse_error">parse_error</SelectItem><SelectItem value="received">received</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={form.listener_id || '__all__'} onValueChange={(v) => setForm({ ...form, listener_id: v === '__all__' ? '' : v })}>
-                  <SelectTrigger className="h-9 bg-background/50 w-full"><SelectValue placeholder="Listener" /></SelectTrigger>
+                  <SelectTrigger className="h-9 w-full"><SelectValue placeholder="Listener" /></SelectTrigger>
                   <SelectContent><SelectItem value="__all__">All listeners</SelectItem>{listeners.map((l) => <SelectItem key={l.id} value={String(l.id)}>{l.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div className="flex gap-2"><Button type="submit" size="sm" className="flex-1">Filter</Button><Button type="button" size="sm" variant="outline" className="flex-1 bg-background/40" onClick={resetFilters}>Reset</Button></div>
+              <div className="flex gap-2"><Button type="submit" size="sm" className="flex-1">Filter</Button><Button type="button" size="sm" variant="outline" className="flex-1" onClick={resetFilters}>Reset</Button></div>
             </form>
           </div>
           <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto p-2">
@@ -253,14 +254,14 @@ export default function JobsIndex({ jobs: initialJobs, listeners = [], filters: 
                     type="button"
                     data-job-id={job.id}
                     onClick={() => setSelectedId(job.id)}
-                    className={`w-full rounded-xl border px-3 py-3 text-left transition ${selected ? 'border-primary/40 bg-primary/10' : 'border-border/60 bg-background/30 hover:bg-background/50'}`}
+                    className={`w-full rounded-[2px] border px-3 py-3 text-left transition ${selected ? 'border-primary/40 bg-primary/8' : 'border-border bg-background/60 hover:bg-muted/30'}`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2"><span className="font-semibold text-primary">#{job.id}</span><StatusBadge status={job.status} /></div>
                         <div className="mt-1 truncate text-xs text-muted-foreground">{job.external_id}</div>
                       </div>
-                      {job.warnings_count > 0 && <Badge className="border-amber-500/20 bg-amber-500/15 text-amber-400 hover:bg-amber-500/15">{job.warnings_count}w</Badge>}
+                      {job.warnings_count > 0 && <Badge className="bg-signal/15 text-signal border-signal/30">{job.warnings_count}w</Badge>}
                     </div>
                     <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
                       <span className="truncate">{job.listener?.name ?? '-'}</span>
@@ -273,31 +274,31 @@ export default function JobsIndex({ jobs: initialJobs, listeners = [], filters: 
             </div>
             {pagination && pagination.current_page < pagination.last_page && (
               <div className="py-3 text-center">
-                <Button variant="outline" size="sm" className="bg-background/40" onClick={() => void loadMore()} disabled={loadingMore}>{loadingMore ? 'Loading...' : 'Load more'}</Button>
+                <Button variant="outline" size="sm"  onClick={() => void loadMore()} disabled={loadingMore}>{loadingMore ? 'Loading...' : 'Load more'}</Button>
               </div>
             )}
           </div>
         </aside>
 
-        <section className="min-h-0 overflow-y-auto border-b border-border/60 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.04),transparent_60%)] xl:border-b-0 xl:border-r">
+        <section className="min-h-0 overflow-y-auto border-b border-border bg-muted/10 xl:border-b-0 xl:border-r">
           <div className="mx-auto flex min-h-full max-w-4xl flex-col items-center px-4 py-6 sm:px-6">
             <div className="mb-4 flex w-full items-center justify-between gap-3">
               <div>
-                <div className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Receipt Preview</div>
+                <div className="font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-primary/80">// receipt preview</div>
                 <div className="text-sm text-muted-foreground">{selectedJob ? `Job #${selectedJob.id} · ${selectedJob.external_id}` : 'Select a job to view the receipt'}</div>
               </div>
-              {selectedJob && <Button variant="outline" size="sm" className="bg-background/40" onClick={() => window.print()}>Print / Save PDF</Button>}
+              {selectedJob && <Button variant="outline" size="sm" onClick={() => window.print()}>Print / Save PDF</Button>}
             </div>
             {selectedJob ? <div className="w-full max-w-[560px]"><ReceiptPreview job={selectedJob} /></div> : <EmptyState title="No preview" description="No job selected yet." />}
           </div>
         </section>
 
-        <aside className="min-h-0 overflow-y-auto bg-card/20 p-4">
+        <aside className="min-h-0 overflow-y-auto bg-card p-4">
           {!selectedJob ? (
             <EmptyState title="No job selected" description="Select a job from the list on the left." />
           ) : (
             <div className="space-y-4">
-              <Card className="border-border/70 bg-card/70">
+              <Card>
                 <CardHeader className="pb-3"><CardTitle className="text-base">Job Detail</CardTitle></CardHeader>
                 <CardContent>
                   <Meta label="ID" value={`#${selectedJob.id}`} />
@@ -315,7 +316,7 @@ export default function JobsIndex({ jobs: initialJobs, listeners = [], filters: 
 
               {selectedDetail && (
                 <>
-                  <Card className="border-border/70 bg-card/70">
+                  <Card>
                     <CardHeader className="pb-3"><CardTitle className="text-base">Metadata</CardTitle></CardHeader>
                     <CardContent>
                       <Meta label="Completed" value={selectedDetail.completed_at ?? '-'} />
@@ -325,14 +326,14 @@ export default function JobsIndex({ jobs: initialJobs, listeners = [], filters: 
                     </CardContent>
                   </Card>
 
-                  <Card className="border-border/70 bg-card/70">
+                  <Card>
                     <CardHeader className="pb-3"><CardTitle className="text-base">Warnings ({selectedDetail.parser_warnings?.length ?? 0})</CardTitle></CardHeader>
                     <CardContent className="space-y-2">
-                      {(selectedDetail.parser_warnings?.length ?? 0) === 0 ? <p className="text-xs text-muted-foreground">No parser warnings.</p> : selectedDetail.parser_warnings!.map((w, i) => <Alert key={i} className="border-amber-500/20 bg-amber-500/5 py-2"><AlertDescription className="font-mono text-[11px] text-amber-400">{w}</AlertDescription></Alert>)}
+                      {(selectedDetail.parser_warnings?.length ?? 0) === 0 ? <p className="text-xs text-muted-foreground">No parser warnings.</p> : selectedDetail.parser_warnings!.map((w, i) => <Alert key={i} className="border-signal/25 bg-signal/5 py-2"><AlertDescription className="font-mono text-[11px] text-signal">{w}</AlertDescription></Alert>)}
                     </CardContent>
                   </Card>
 
-                  <Card className="border-border/70 bg-card/70">
+                  <Card>
                     <CardHeader className="pb-3"><CardTitle className="text-base">Command Inspector ({selectedDetail.commands?.length ?? 0})</CardTitle></CardHeader>
                     <CardContent className="space-y-2">
                       {(selectedDetail.commands ?? []).map((cmd, i) => (
@@ -346,23 +347,23 @@ export default function JobsIndex({ jobs: initialJobs, listeners = [], filters: 
                     </CardContent>
                   </Card>
 
-                  <Card className="border-border/70 bg-card/70">
+                  <Card>
                     <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
                       <CardTitle className="text-base">Raw Data Viewer</CardTitle>
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="bg-background/40" disabled={!selectedDetail.raw_base64} onClick={() => { if (selectedDetail.raw_base64) void navigator.clipboard.writeText(selectedDetail.raw_base64); }}>Copy base64</Button>
-                        <Button variant="outline" size="sm" className="bg-background/40" disabled={!selectedDetail.raw_hex_dump?.length} onClick={() => { const dump = (selectedDetail.raw_hex_dump ?? []).join('\n'); if (dump) void navigator.clipboard.writeText(dump); }}>Copy hex</Button>
+                        <Button variant="outline" size="sm"  disabled={!selectedDetail.raw_base64} onClick={() => { if (selectedDetail.raw_base64) void navigator.clipboard.writeText(selectedDetail.raw_base64); }}>Copy base64</Button>
+                        <Button variant="outline" size="sm"  disabled={!selectedDetail.raw_hex_dump?.length} onClick={() => { const dump = (selectedDetail.raw_hex_dump ?? []).join('\n'); if (dump) void navigator.clipboard.writeText(dump); }}>Copy hex</Button>
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <div>
                         <div className="mb-1 text-xs font-medium text-muted-foreground">Hex + ASCII</div>
-                        <pre className="max-h-64 overflow-auto rounded-md border bg-background/30 p-2 font-mono text-[10px] leading-4 whitespace-pre">{selectedDetail.raw_hex_dump?.length ? selectedDetail.raw_hex_dump.join('\n') : 'No raw payload.'}</pre>
-                        {selectedDetail.raw_truncated && <p className="mt-2 text-[11px] text-amber-500">Hex dump truncated.</p>}
+                        <pre className="max-h-64 overflow-auto rounded-md border border-border bg-muted/20 p-2 font-mono text-[10px] leading-4 whitespace-pre">{selectedDetail.raw_hex_dump?.length ? selectedDetail.raw_hex_dump.join('\n') : 'No raw payload.'}</pre>
+                        {selectedDetail.raw_truncated && <p className="mt-2 text-[11px] text-signal">Hex dump truncated.</p>}
                       </div>
-                      <details className="rounded-md border bg-background/20 p-2">
+                      <details className="rounded-md border border-border bg-muted/10 p-2">
                         <summary className="cursor-pointer text-xs font-medium text-muted-foreground">Raw payload (base64)</summary>
-                        <pre className="mt-2 max-h-48 overflow-auto rounded-md bg-background/30 p-2 font-mono text-[10px] whitespace-pre-wrap break-all">{selectedDetail.raw_base64 ?? '-'}</pre>
+                        <pre className="mt-2 max-h-48 overflow-auto rounded-md bg-muted/20 p-2 font-mono text-[10px] whitespace-pre-wrap break-all">{selectedDetail.raw_base64 ?? '-'}</pre>
                       </details>
                     </CardContent>
                   </Card>

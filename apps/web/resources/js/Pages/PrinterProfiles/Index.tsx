@@ -30,7 +30,7 @@ function ProfileForm({ profile, onDone }: { profile?: PrinterProfile; onDone?: (
     else form.post('/printer-profiles', { preserveScroll: true, onSuccess: () => { form.reset('name', 'printer_model'); onDone?.(); } });
   };
   const prefix = profile ? `profile-${profile.id}` : 'profile-new';
-  const field = 'bg-background/50';
+  const field = '';
   return (
     <form onSubmit={submit} className="grid gap-4 md:grid-cols-4 md:items-end">
       <div className="space-y-2 md:col-span-2"><Label htmlFor={`${prefix}-name`}>Name</Label><Input id={`${prefix}-name`} className={field} value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} required /></div>
@@ -55,7 +55,7 @@ export default function PrinterProfilesIndex({ profiles }: { profiles: PrinterPr
   return (
     <AppShell title="Printer Profiles" description="Define printer characteristics (paper, DPI, chars/line, code page, image limits) so preview and parsing are more accurate.">
       <Head title="Printer Profiles - Open POS Printer Emulator" />
-      {flash && <Alert className="border-emerald-500/30 bg-emerald-500/5 text-emerald-400"><AlertDescription>{flash}</AlertDescription></Alert>}
+      {flash && <Alert className="border-ok/40 bg-ok/10 text-ok"><AlertDescription>{flash}</AlertDescription></Alert>}
       {Object.keys(errors).length > 0 && <Alert variant="destructive"><AlertDescription>{Object.values(errors).map((e, i) => <div key={i}>{e}</div>)}</AlertDescription></Alert>}
 
       <Card className="border-border/70 bg-card/70 mb-4">
@@ -63,7 +63,7 @@ export default function PrinterProfilesIndex({ profiles }: { profiles: PrinterPr
         <CardContent><ProfileForm /></CardContent>
       </Card>
 
-      <Card className="border-border/70 bg-card/70">
+      <Card>
         <CardHeader className="flex-row items-center justify-between space-y-0"><div><CardTitle className="text-base">Printer Profiles</CardTitle><p className="text-sm text-muted-foreground">Built-in profiles are read-only; custom profiles can be edited/deleted when not used by a listener.</p></div><Badge variant="outline">{profiles.length} profiles</Badge></CardHeader>
         <CardContent>
           <div className="overflow-x-auto rounded-xl border bg-background/20">
@@ -81,9 +81,9 @@ export default function PrinterProfilesIndex({ profiles }: { profiles: PrinterPr
                     <TableCell>
                       {p.is_builtin ? <span className="text-xs text-muted-foreground">read-only</span> : (
                         <div className="space-y-2">
-                          <Button variant="outline" size="sm" className="bg-background/40" type="button" onClick={() => setEditingId(editingId === p.id ? null : p.id)}>{editingId === p.id ? 'Close' : 'Edit'}</Button>
+                          <Button variant="outline" size="sm" className="" type="button" onClick={() => setEditingId(editingId === p.id ? null : p.id)}>{editingId === p.id ? 'Close' : 'Edit'}</Button>
                           <Button variant="destructive" size="sm" type="button" onClick={() => { if (confirm(`Delete ${p.name}?`)) router.delete(`/printer-profiles/${p.id}`, { preserveScroll: true }); }}>Delete</Button>
-                          {editingId === p.id && <div className="mt-2 rounded-lg border bg-background/40 p-3"><ProfileForm profile={p} onDone={() => setEditingId(null)} /></div>}
+                          {editingId === p.id && <div className="mt-2 rounded-lg border  p-3"><ProfileForm profile={p} onDone={() => setEditingId(null)} /></div>}
                         </div>
                       )}
                     </TableCell>

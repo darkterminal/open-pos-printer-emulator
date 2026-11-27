@@ -4,29 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <title>{{ $title ?? 'Open POS Printer Emulator' }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
-        :root { --bg:#0b0f14; --panel:#141b24; --muted:#8fa3b8; --text:#e6edf3; --accent:#57d38c; --border:#243142; --danger:#ff7b72; }
+        :root { --bg:#F7F4EF; --panel:#FFFDFC; --muted:#7A746C; --text:#2A2724; --accent:#D9653B; --border:#D8D1C7; --danger:#C4554D; --ok:#5A8A6A; }
         * { box-sizing: border-box; }
-        body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; background: linear-gradient(180deg,#0b0f14,#101720); color:var(--text); }
+        body { margin:0; font-family: 'Space Grotesk', ui-sans-serif, system-ui, -apple-system, sans-serif; background: var(--bg); color:var(--text); }
         a { color: var(--accent); text-decoration: none; }
         .shell { max-width: 1200px; margin: 0 auto; padding: 24px; }
-        .nav { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; background:rgba(20,27,36,.9); border:1px solid var(--border); border-radius:12px; margin-bottom:24px; }
-        .brand { font-weight:700; letter-spacing:.02em; }
+        .nav { display:flex; justify-content:space-between; align-items:center; padding:14px 18px; background:var(--panel); border:1px solid var(--border); border-radius:2px; margin-bottom:24px; }
+        .brand { font-weight:700; letter-spacing:.01em; display:flex; align-items:center; gap:10px; }
+        .brand img { width:32px; height:32px; border-radius:3px; object-fit:contain; }
         .muted { color: var(--muted); }
-        .panel { background:rgba(20,27,36,.92); border:1px solid var(--border); border-radius:12px; padding:20px; }
-        .btn { background:var(--accent); color:#082012; border:0; padding:10px 14px; border-radius:8px; font-weight:600; cursor:pointer; }
+        .panel { background:var(--panel); border:1px solid var(--border); border-radius:2px; padding:20px; box-shadow: 0 1px 2px rgba(42,39,36,.04); }
+        .btn { background:var(--accent); color:#FFFDFC; border:1px solid rgba(217,101,59,.4); padding:10px 14px; border-radius:2px; font-weight:600; cursor:pointer; font-family: 'IBM Plex Mono', monospace; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
         .btn-secondary { background:transparent; color:var(--text); border:1px solid var(--border); }
-        input { width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--border); background:#0f1620; color:var(--text); }
+        input { width:100%; padding:10px 12px; border-radius:2px; border:1px solid var(--border); background:#fff; color:var(--text); }
         label { display:block; margin-bottom:6px; color:var(--muted); font-size:14px; }
         table { width:100%; border-collapse: collapse; }
         th, td { padding:12px 10px; border-bottom:1px solid var(--border); text-align:left; font-size:14px; vertical-align:top; }
-        th { color: var(--muted); font-weight:600; }
-        .badge { display:inline-block; padding:4px 8px; border-radius:999px; font-size:12px; border:1px solid var(--border); }
-        .badge-ok { color:#57d38c; border-color:#28543a; background:#102218; }
-        .badge-warn { color:#ffd166; border-color:#5a4a20; background:#211c0d; }
-        .badge-err { color:#ff7b72; border-color:#5a2522; background:#211010; }
+        th { color: var(--muted); font-weight:600; font-family: 'IBM Plex Mono', monospace; font-size:11px; text-transform:uppercase; letter-spacing:.06em; }
+        .badge { display:inline-block; padding:4px 8px; border-radius:2px; font-size:11px; border:1px solid var(--border); font-family:'IBM Plex Mono', monospace; text-transform:uppercase; }
+        .badge-ok { color:var(--ok); border-color:rgba(90,138,106,.3); background:rgba(90,138,106,.12); }
+        .badge-warn { color:var(--accent); border-color:rgba(217,101,59,.3); background:rgba(217,101,59,.1); }
+        .badge-err { color:var(--danger); border-color:rgba(196,85,77,.3); background:rgba(196,85,77,.1); }
         .error { color: var(--danger); font-size: 14px; margin-top: 8px; }
         .grid { display:grid; gap:16px; }
     </style>
@@ -35,8 +39,8 @@
 <div class="shell">
     <div class="nav">
         <div>
-            <div class="brand">Open POS Printer Emulator</div>
-            <div class="muted">Sprint 1 foundation — TCP ingest to job history</div>
+            <div class="brand"><img src="/oppe.png" alt="OPPE logo"> Open POS Printer Emulator</div>
+            <div class="muted" style="margin-left:42px;font-size:13px;">TCP ingest to job history</div>
         </div>
         <div style="display:flex; gap:10px; align-items:center;">
             @auth
