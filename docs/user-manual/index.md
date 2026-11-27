@@ -69,7 +69,6 @@ The Jobs Workspace is the main screen: job history on the left, receipt preview 
 | **[User guide](user-guide.md)** | Step-by-step web UI guide for non-technical users. |
 | **[Integration with ESC/POS Printer Server](integration-escpos-printer-server.md)** | End-to-end POS-like integration example. |
 | **[Technical guide](technical-guide.md)** | Architecture, config, internal contract, and commands. |
-| **[Windows distribution target](windows-distribution.md)** | Planned Windows local distribution while keeping MacOS/Linux container mode. |
 | **[Troubleshooting](troubleshooting.md)** | Common issues and fixes. |
 
 <div class="support-callout">
