@@ -52,7 +52,8 @@ jobs:
             docker compose -f compose.yaml -f compose.ci.yaml exec -T web php artisan --version >/dev/null 2>&1 && break
             sleep 2
           done
-          docker compose -f compose.yaml -f compose.ci.yaml exec -T web php artisan key:generate --force
+          docker compose -f compose.yaml -f compose.ci.yaml exec -T web php artisan key:generate --force --no-interaction
+          docker compose -f compose.yaml -f compose.ci.yaml exec -T web php artisan optimize:clear
           docker compose -f compose.yaml -f compose.ci.yaml exec -T web php artisan migrate --force
           docker compose -f compose.yaml -f compose.ci.yaml exec -T web php artisan db:seed --force
           docker compose -f compose.yaml -f compose.ci.yaml exec -T web npm ci
@@ -61,10 +62,14 @@ jobs:
       - name: Wait for web
         run: |
           for i in {1..60}; do
-            curl -fsS http://localhost:8080/login >/dev/null && break
+            code=$(curl -s -o /tmp/web-login.html -w "%{http_code}" http://localhost:8080/login || true)
+            if [ "$code" = "200" ]; then exit 0; fi
             sleep 2
           done
-          curl -fsS http://localhost:8080/login >/dev/null
+          echo "Web did not become ready; last response:"
+          cat /tmp/web-login.html || true
+          docker compose -f compose.yaml -f compose.ci.yaml logs --no-color web | tail -200 || true
+          exit 1
 
       - name: Install Playwright
         working-directory: apps/web
