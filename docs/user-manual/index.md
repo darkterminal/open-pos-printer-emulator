@@ -1,60 +1,68 @@
 ---
 title: Overview
-description: What Open POS Printer Emulator is, who it is for, and how it fits into an ESC/POS workflow.
+description: What Open POS Printer Emulator is, who it’s for, and where to start in the documentation.
 section: Introduction
 eyebrow: Product guide
 ---
 
 ## What is Open POS Printer Emulator?
 
-**Open POS Printer Emulator** is a self-hosted open-source web application for testing ESC/POS integrations without physical printers.
+**Open POS Printer Emulator** is a self-hosted, open-source web application for testing ESC/POS printer integrations **without a physical printer**.
 
-It sits between your POS/client and a real printer during development:
+Instead of printing to hardware during development or QA, your POS/application sends ESC/POS data to the emulator. The emulator receives the data, stores it as a job, and shows it in a web UI where you can inspect the receipt preview and technical details.
 
-1. Your POS/client sends raw ESC/POS bytes over TCP (default `9100`).
-2. The emulator sidecar receives and parses the payload.
-3. Laravel stores the job and broadcasts updates.
-4. The web UI shows receipt preview, command inspector, warnings, and raw data.
+## How It Works
 
-## Who Is It For?
+```text
+POS / Application
+  -> sends ESC/POS bytes over TCP (default port 9100)
+  -> Open POS Printer Emulator receives and parses the data
+  -> Job appears in the Web UI (/jobs)
+  -> You review Receipt Preview, Warnings, and Raw Data
+```
 
-### Non-technical users
+## Who Is This For?
 
-- View received receipts in a browser.
-- Confirm a POS is sending print jobs.
-- Share job IDs/screenshots with developers.
+### Non-technical users / QA / operations
 
-### Technical users
+- Confirm that a POS or app is sending print jobs.
+- View the receipt in a browser.
+- Share job ID and screenshot with developers when something looks wrong.
+
+Start here: **[User guide](user-guide.md)**.
+
+### Developers / integrators
 
 - Debug ESC/POS payloads and parser warnings.
 - Inspect raw hex/base64 and parsed commands.
-- Test listener behavior, fault simulation, and printer profiles.
-- Integrate with [ESC/POS Printer Server](https://github.com/darkterminal/escpos-printer-server) before using real hardware.
+- Test multiple listeners/printer profiles.
+- Integrate before using real hardware.
+
+Start here: **[Getting started](getting-started.md)**, then **[Integration with ESC/POS Printer Server](integration-escpos-printer-server.md)**.
+
+## Web UI at a Glance
+
+The Jobs Workspace is the main screen: job history on the left, receipt preview in the center, and job details on the right.
+
+![Jobs workspace overview](../images/screenshots/guide-jobs-workspace.png)
 
 ## Key Features
 
-- **TCP ESC/POS ingest** — default listener on port `9100`.
-- **Receipt preview** — visual rendering for supported ESC/POS commands.
-- **Command inspector** — parsed command list with offsets/args.
-- **Raw data viewer** — hex dump and base64 payload.
-- **Realtime updates** — Reverb/Echo with polling fallback.
+- **TCP ESC/POS ingest** — receive raw printer data on configurable listeners (default `9100`).
+- **Receipt preview** — visual rendering of supported ESC/POS commands.
+- **Command inspector** — parsed command list for debugging.
+- **Raw data viewer** — hex/base64 payload for deep inspection.
+- **Realtime updates** — new jobs appear live (with polling fallback).
 - **Listeners & printer profiles** — manage ports and printer presets.
-- **Fault simulation** — test error conditions like paper out or cover open.
+- **Fault simulation** — simulate printer errors like paper out or cover open.
 - **Self-hosted** — run locally with Kiri or Docker Compose.
 
-## Quick Flow
+## Documentation Map
 
-```text
-POS / Client
-  -> TCP :9100 (raw ESC/POS)
-  -> Sidecar parser
-  -> Laravel ingest/store
-  -> Web UI (/jobs)
-```
-
-## Next Steps
-
-- [Getting started](getting-started.md) — run the emulator locally.
-- [User guide](user-guide.md) — use the web UI.
-- [Integration with ESC/POS Printer Server](integration-escpos-printer-server.md) — test a full POS print pipeline.
-- [Technical guide](technical-guide.md) — architecture, config, commands, and internals.
+| Page | Description |
+| --- | --- |
+| **[Getting started](getting-started.md)** | Install, run, and send your first test print. |
+| **[User guide](user-guide.md)** | Step-by-step web UI guide for non-technical users. |
+| **[Integration with ESC/POS Printer Server](integration-escpos-printer-server.md)** | End-to-end POS-like integration example. |
+| **[Technical guide](technical-guide.md)** | Architecture, config, internal contract, and commands. |
+| **[Troubleshooting](troubleshooting.md)** | Common issues and fixes. |

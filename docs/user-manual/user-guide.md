@@ -1,88 +1,150 @@
 ---
 title: User guide
-description: How to use the Open POS Printer Emulator web UI for daily testing and receipt inspection.
+description: Step-by-step guide for using the Open POS Printer Emulator web UI, from login to viewing a receipt preview.
 section: Guide
 eyebrow: For users
 ---
 
-## Sign In
+This guide is written for **non-technical users** who want to use the web UI to confirm that print jobs are arriving and to view receipts. It also includes notes for developers where useful.
 
-Open the emulator URL and sign in with your credentials. In local seeded development, the default account is:
+## What You Can Do in the Web UI
 
-- **Email:** `admin@example.com`
-- **Password:** `password`
-
-## Jobs Workspace
-
-The **Jobs** page is the main workspace. It has three panels:
-
-- **Left — Job History**: received print jobs, search/filter, scroll to load more.
-- **Center — Receipt Preview**: visual preview of the selected job.
-- **Right — Job Detail**: metadata, warnings, command inspector, and raw data.
-
-### Selecting a Job
-
-Click a job in the left list. The center preview and right detail panel update to that job.
-
-### Filtering Jobs
-
-Use the filters above the job list:
-
-- **Search**: external ID, correlation ID, or source IP.
-- **Status**: `parsed`, `partial`, `parse_error`, etc.
-- **Listener**: filter by TCP listener.
-
-Click **Filter** to apply, or **Reset** to clear.
-
-### Status Meanings
-
-| Status | Meaning |
+| Page | What it’s for |
 | --- | --- |
-| `parsed` | Payload parsed successfully. |
-| `partial` | Parsed with warnings/unsupported commands. |
-| `parse_error` | Parsing failed or was incomplete; raw payload is still stored. |
+| **Jobs** | See incoming print jobs, preview receipts, and inspect job details. |
+| **Listeners** | See which TCP ports are receiving printer data and check their status. |
+| **Printer Profiles** | See printer presets (paper size, characters per line, etc.) used by listeners. |
 
-### Export / Print
+> **Default local URL:** `http://localhost:8080`  
+> **Default local login:** `admin@example.com` / `password`
 
-Use **Print / Save PDF** above the receipt preview to print or save the selected receipt from your browser.
+---
 
-## Job Detail Information
+## Step-by-Step: From Login to Receipt Preview
 
-The right panel includes:
+### Step 1 — Open the Web UI and Sign In
 
-- **Metadata**: IDs, listener, source, timestamps, size, correlation, SHA-256, parser profile.
-- **Warnings**: parser warnings for unsupported or unusual commands.
-- **Command Inspector**: parsed commands with offsets and args.
-- **Raw Data Viewer**: hex dump and base64 payload; copy buttons for debugging.
+1. Open your browser and go to the emulator URL (local default: `http://localhost:8080/login`).
+2. Enter your **Email** and **Password**.
+3. Optionally check **Remember me**.
+4. Click **Sign in**.
 
-## Listeners
+After signing in, you will be taken to the **Jobs Workspace**.
 
-The **Listeners** page manages TCP ports that receive ESC/POS data.
+![Login page](../images/screenshots/guide-login.png)
 
-Common tasks:
+### Step 2 — Understand the Jobs Workspace
 
-- Check listener status and last error.
-- Create/edit/delete listeners (as permitted).
-- Configure fault simulation (paper out, cover open, cutter error, offline).
-- Sync sidecar listener state.
+The **Jobs** page is the main screen. It is divided into three areas:
 
-> Most users only need the correct listener host/port. Default is `9100`.
+1. **Left panel — Job History**  
+   Shows received print jobs. You can search and filter jobs here.
+2. **Center panel — Receipt Preview**  
+   Shows the visual receipt for the selected job. This is where you confirm what the receipt looks like.
+3. **Right panel — Job Detail**  
+   Shows technical information: status, listener, timestamps, warnings, parsed commands, and raw data.
 
-## Printer Profiles
+At the top, you’ll see the live connection indicator and total job count.
 
-The **Printer Profiles** page manages printer presets used by listeners/emulation.
+![Jobs workspace overview](../images/screenshots/guide-jobs-workspace.png)
 
-- View built-in and custom profiles.
-- Create/edit custom profiles.
-- Built-in profiles may be read-only.
-- Profiles in use by listeners may be protected from deletion.
+### Step 3 — Make Sure a Print Job Arrives
 
-## Dark Mode
+If your POS or application is already configured to send ESC/POS data to the emulator, send a test print from that system.
 
-Use the sun/moon icon in the top navigation to switch themes. The preference is saved in your browser.
+For a quick local test (developer/admin), you can send a sample receipt over TCP to the default listener port `9100`:
 
-## Tips
+```bash
+printf "\x1B\x40Hello ESC/POS\n\x1D\x56\x00" | nc 127.0.0.1 9100
+```
 
-- If a receipt looks wrong, check **Warnings** first.
-- If a command is unsupported, inspect **Command Inspector** and **Raw Data Viewer**.
-- Share Job ID, external ID, received time, and screenshot when reporting issues.
+After the job is received:
+
+- The job count increases.
+- A new job appears in the **Job History** list on the left.
+- The receipt appears in the **Receipt Preview** when selected.
+
+> **Tip:** If you use Docker/Kiri, make sure the emulator stack is running and port `9100` is exposed.
+
+### Step 4 — Select the Job in Job History
+
+1. Look at the **left panel** (Job History).
+2. Click the job you want to inspect. Each job card shows:
+   - Job ID (e.g. `#6`)
+   - Status (`parsed`, `partial`, `parse_error`)
+   - External/correlation ID
+   - Listener name
+   - Received time
+3. The selected job will be highlighted.
+
+### Step 5 — Check the Receipt Preview
+
+1. Look at the **center panel**.
+2. Confirm the receipt content is displayed correctly: store name, items, totals, payment, return/change, and cut marker.
+3. Use **Print / Save PDF** if you want to save the preview from your browser.
+
+**What to look for:**
+
+- **Receipt looks correct** — the POS payload was received and rendered.
+- **Receipt looks incomplete** — check job status/warnings in the right panel.
+- **No job appears** — check listener status and that your POS is sending to the correct host/port.
+
+### Step 6 — Review Job Details (Optional but Helpful)
+
+The **right panel** gives more detail about the selected job:
+
+- **Metadata** — job IDs, listener, source IP, received/completed time, payload size, SHA-256.
+- **Warnings** — parser warnings, such as unsupported commands. `partial` status often means warnings exist.
+- **Command Inspector** — parsed ESC/POS commands with offsets/args. Useful for developers.
+- **Raw Data Viewer** — hex and base64 payload. Useful for debugging or sharing with support/developers.
+
+If you need to report an issue, share: **Job ID**, **External ID**, **received time**, **status**, and a screenshot.
+
+---
+
+## Other Pages
+
+### Listeners
+
+The **Listeners** page shows TCP ports that receive ESC/POS data. Most non-technical users only need to confirm that a listener is **listening** on the expected port (default `9100`).
+
+You can also see:
+
+- Listener name and external ID
+- Bind host/port
+- Assigned printer profile
+- DB status and sidecar status
+- Heartbeat and last error
+- Job count
+- Fault simulation toggles (for testing error scenarios)
+
+![Listeners page](../images/screenshots/guide-listeners.png)
+
+### Printer Profiles
+
+The **Printer Profiles** page contains printer presets. These profiles help the emulator interpret and preview receipts with printer-specific characteristics.
+
+- **Built-in profiles** are read-only.
+- **Custom profiles** can be created by admins/developers when needed.
+- Listeners can be mapped to a profile.
+
+![Printer profiles page](../images/screenshots/guide-printer-profiles.png)
+
+---
+
+## Common Statuses
+
+| Status | What it means | What to do |
+| --- | --- | --- |
+| `parsed` | Job parsed successfully. | Review receipt preview. |
+| `partial` | Job parsed, but with warnings/unsupported commands. | Check Warnings and Command Inspector. |
+| `parse_error` | Parser could not fully parse the payload. | Check Raw Data Viewer; share job details with a developer. |
+
+## Troubleshooting for Non-Technical Users
+
+- **I can’t log in** — confirm the URL and credentials. For local seeded dev, use `admin@example.com` / `password`.
+- **No jobs appear** — confirm the POS is sending to the correct IP and port (default `9100`), and the listener is active.
+- **Receipt preview looks strange** — the command may be unsupported or partially supported. Check status/warnings; the raw payload is still saved.
+- **Need help** — take a screenshot and include Job ID, time, and listener name.
+
+For more detailed fixes, see [Troubleshooting](troubleshooting.md). Developers can also read the [Technical guide](technical-guide.md).

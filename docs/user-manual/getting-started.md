@@ -1,42 +1,51 @@
 ---
 title: Getting started
-description: Run Open POS Printer Emulator locally with Kiri or Docker Compose and send your first test print.
+description: Run Open POS Printer Emulator locally and send your first test print.
 section: Guide
 eyebrow: First run
 ---
 
+This page helps you get the emulator running on your machine. If you only want to learn how to use the web UI, go directly to the **[User guide](user-guide.md)**.
+
 ## Requirements
 
 - **Kiri** (default) or **Docker Compose**
-- Ports available: `8080`, `8081`, `9100`, `3001`, `5432` (defaults)
+- Ports available: `8080` (web), `8081` (Reverb), `9100` (TCP listener), `3001` (sidecar), `5432` (Postgres)
 - `nc` (netcat) for the quick TCP smoke test (optional)
 
-## Install and Run
-
-### 1. Prepare environment files
+## 1. Prepare Environment Files
 
 ```bash
 cp apps/web/.env.example apps/web/.env
 cp apps/sidecar/.env.example apps/sidecar/.env
 ```
 
-### 2. Start the stack
+## 2. Start the Stack
 
-Kiri (default):
+**Kiri (default):**
 
 ```bash
 make up
 ```
 
-Docker Compose:
+**Docker Compose:**
 
 ```bash
 make up ENGINE=docker
 ```
 
-### 3. Initialize Laravel app
+Wait until services are up. You can check with:
 
-Use the same engine you started with. For Kiri:
+```bash
+make ps
+# or: make ps ENGINE=docker
+```
+
+## 3. Initialize the Laravel App
+
+Run these commands using the same engine you started with.
+
+**Kiri:**
 
 ```bash
 kiri compose exec web composer install
@@ -44,52 +53,52 @@ kiri compose exec web php artisan key:generate
 kiri compose exec web php artisan migrate --seed
 ```
 
-For Docker Compose, replace `kiri compose` with `docker compose`.
+**Docker Compose:**
 
-## Access the App
+```bash
+docker compose exec web composer install
+docker compose exec web php artisan key:generate
+docker compose exec web php artisan migrate --seed
+```
 
-| Service | URL |
-| --- | --- |
-| Web UI | `http://localhost:8080` |
-| Jobs page | `http://localhost:8080/jobs` |
-| Reverb | `http://localhost:8081` |
-| TCP listener | `localhost:9100` |
-| Sidecar health | `http://localhost:3001/health` |
+## 4. Open the Web UI
 
-Default seeded credentials (local dev):
+Open `http://localhost:8080/login` in your browser.
+
+**Default local credentials:**
 
 - **Email:** `admin@example.com`
 - **Password:** `password`
 
-## Send a Test Print
+![Login page](../images/screenshots/guide-login.png)
+
+## 5. Send Your First Test Print
+
+Send a simple ESC/POS payload to the default TCP listener on port `9100`:
 
 ```bash
 printf "\x1B\x40Hello ESC/POS\n\x1D\x56\x00" | nc 127.0.0.1 9100
 ```
 
-Open `http://localhost:8080/jobs` — you should see a new job.
+Then open the **Jobs** page (`http://localhost:8080/jobs`). You should see a new job in the left panel and the receipt in the center preview.
 
-## Common Commands
+![Jobs workspace with receipt preview](../images/screenshots/guide-jobs-workspace.png)
 
-```bash
-make ps
-make logs
-make test
-make lint
-make e2e
-make down
-```
+## 6. Where to Go Next
 
-Docker Compose variant:
+- **[User guide](user-guide.md)** — step-by-step walkthrough of Jobs, Listeners, and Printer Profiles.
+- **[Integration with ESC/POS Printer Server](integration-escpos-printer-server.md)** — send real POS-style receipts through EPS into OPPE.
+- **[Troubleshooting](troubleshooting.md)** — common issues and fixes.
+
+## Useful Commands
 
 ```bash
-make ps ENGINE=docker
-make logs ENGINE=docker
-make test ENGINE=docker
-make lint ENGINE=docker
+make up          # Start stack (Kiri default)
+make ps          # Check service status
+make logs        # Follow logs
+make test        # Run tests
+make lint        # Run lint/format checks
+make down        # Stop stack
 ```
 
-## Next Steps
-
-- [User guide](user-guide.md) — learn the Jobs, Listeners, and Printer Profiles screens.
-- [Integration with ESC/POS Printer Server](integration-escpos-printer-server.md) — route real POS print jobs to the emulator.
+For Docker Compose, append `ENGINE=docker` to make commands, e.g. `make up ENGINE=docker`.
