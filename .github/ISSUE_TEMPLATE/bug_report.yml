@@ -2,6 +2,10 @@ name: Bug report
 description: Report incorrect behavior or an error
 labels: ["bug"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Open POS Printer Emulator is a development/QA tool. Please include enough detail to reproduce the issue locally.
   - type: textarea
     id: description
     attributes:

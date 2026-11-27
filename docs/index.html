@@ -95,12 +95,15 @@
                 <img class="hero__watermark" src="{{ site.baseurl }}/images/oppe.png" alt="" aria-hidden="true" width="1200" height="1200" draggable="false" decoding="async" />
                 <div class="container hero-grid">
                     <div class="hero__copy">
-                        <span class="eyebrow mono-label">Open source · Apache-2.0</span>
+                        <span class="eyebrow mono-label">Open source · Apache-2.0 · Dev tool</span>
                         <h1>Test ESC/POS flows <em>without</em> a physical printer.</h1>
                         <p class="hero__sub">
                             Open POS Printer Emulator is a self-hosted web app for testing ESC/POS
                             integrations. Send raw bytes over TCP, inspect parsed commands, preview
                             receipts, and debug print jobs in real time.
+                        </p>
+                        <p class="hero__note">
+                            <strong>Development only:</strong> designed for local dev/QA, not recommended for production deployment.
                         </p>
                         <div class="hero__actions">
                             <a class="btn btn--primary" href="#quick-start">
@@ -128,10 +131,7 @@
                                     <button type="button" class="code-block__btn" data-action="copy" data-copy-target="hero-install-command">Copy</button>
                                 </div>
                             </div>
-                            <pre><code id="hero-install-command" class="language-bash">cp apps/web/.env.example apps/web/.env
-cp apps/sidecar/.env.example apps/sidecar/.env
-make up
-# open http://localhost:8080/jobs</code></pre>
+                            <pre><code id="hero-install-command" class="language-bash">curl -fsSL https://raw.githubusercontent.com/darkterminal/open-pos-printer-emulator/main/scripts/install.sh | bash</code></pre>
                         </div>
                     </div>
                 </div>
@@ -277,7 +277,26 @@ make up
                                 <button type="button" class="code-block__btn" data-action="copy" data-copy-target="install-command">Copy</button>
                             </div>
                         </div>
-                        <pre><code id="install-command" class="language-bash">cp apps/web/.env.example apps/web/.env
+                        <pre><code id="install-command" class="language-bash">curl -fsSL https://raw.githubusercontent.com/darkterminal/open-pos-printer-emulator/main/scripts/install.sh | bash</code></pre>
+                    </div>
+
+                    <p class="hero__note">The installer is for local development only. Review <a href="https://github.com/darkterminal/open-pos-printer-emulator/blob/main/scripts/install.sh">scripts/install.sh</a> before running. For manual setup:</p>
+
+                    <div class="code-block">
+                        <div class="code-block__header">
+                            <div class="code-block__meta">
+                                <span class="code-block__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                                <span class="code-block__lang">bash</span>
+                            </div>
+                            <div class="code-block__actions">
+                                <button type="button" class="code-block__btn" data-action="wrap">Wrap</button>
+                                <button type="button" class="code-block__btn" data-action="oneline">One-liner</button>
+                                <button type="button" class="code-block__btn" data-action="copy" data-copy-target="manual-install-command">Copy</button>
+                            </div>
+                        </div>
+                        <pre><code id="manual-install-command" class="language-bash">git clone https://github.com/darkterminal/open-pos-printer-emulator.git
+cd open-pos-printer-emulator
+cp apps/web/.env.example apps/web/.env
 cp apps/sidecar/.env.example apps/sidecar/.env
 make up
 # Docker: make up ENGINE=docker</code></pre>
@@ -316,8 +335,8 @@ make up
                             <span>Contributors</span>
                         </div>
                         <div class="stat">
-                            <strong id="release-tag">MVP</strong>
-                            <span>Project stage</span>
+                            <strong id="release-tag">Dev</strong>
+                            <span>Release channel</span>
                         </div>
                     </div>
                     <div class="community__copy">

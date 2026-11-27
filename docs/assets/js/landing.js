@@ -156,6 +156,8 @@
             if (results[1].status === "fulfilled" && results[1].value.ok) {
                 var release = await results[1].value.json();
                 if (release && release.tag_name) setText("release-tag", release.tag_name);
+            } else {
+                setText("release-tag", "Dev");
             }
 
         } catch (e) {

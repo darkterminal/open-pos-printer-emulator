@@ -4,7 +4,7 @@ Operational guide for agents working in this repository. Follow these instructio
 
 ## Project Overview
 
-Open POS Printer Emulator is a self-hosted open-source web application for testing ESC/POS integrations without physical printers. A POS client sends an ESC/POS byte stream via raw TCP to a listener (default `9100`), the Node.js sidecar processes the payload, Laravel stores and broadcasts events, and the React/Inertia UI displays preview/inspector/history.
+Open POS Printer Emulator is a self-hosted open-source web application for testing ESC/POS integrations without physical printers. It is a **development/QA tool**, not recommended for production deployment. A POS client sends an ESC/POS byte stream via raw TCP to a listener (default `9100`), the Node.js sidecar processes the payload, Laravel stores and broadcasts events, and the React/Inertia UI displays preview/inspector/history.
 
 ## Stack
 

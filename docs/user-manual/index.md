@@ -9,6 +9,8 @@ eyebrow: Product guide
 
 **Open POS Printer Emulator** is a self-hosted, open-source web application for testing ESC/POS printer integrations **without a physical printer**.
 
+> **Development only:** this tool is designed for local development, QA, and integration testing. It is not recommended for production deployment.
+
 Instead of printing to hardware during development or QA, your POS/application sends ESC/POS data to the emulator. The emulator receives the data, stores it as a job, and shows it in a web UI where you can inspect the receipt preview and technical details.
 
 ## How It Works

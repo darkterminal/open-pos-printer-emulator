@@ -1,6 +1,6 @@
 # Contributing to Open POS Printer Emulator
 
-Thank you for your interest in contributing. This project is still in an early stage (Sprint 1/Foundation), so small, clean contributions are very helpful.
+Thank you for your interest in contributing. Open POS Printer Emulator is an open-source **development tool** for testing ESC/POS integrations without physical printers. Contributions that improve parser accuracy, developer experience, docs, tests, and debugging workflows are welcome.
 
 ## Ground Rules
 
@@ -62,4 +62,4 @@ make lint
 
 ## Code of Conduct
 
-By participating, you are expected to maintain professional and respectful interactions. Details will be added in `CODE_OF_CONDUCT.md`.
+By participating, you are expected to follow the [Code of Conduct](CODE_OF_CONDUCT.md).

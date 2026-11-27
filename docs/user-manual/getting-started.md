@@ -7,20 +7,39 @@ eyebrow: First run
 
 This page helps you get the emulator running on your machine. If you only want to learn how to use the web UI, go directly to the **[User guide](user-guide.md)**.
 
+> **Development only:** Open POS Printer Emulator is for local development, QA, and integration testing. It is not recommended for production deployment.
+
+## Option A: Installer Script (Recommended)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/darkterminal/open-pos-printer-emulator/main/scripts/install.sh | bash
+```
+
+The script clones the repo, prepares `.env` files, starts Kiri/Docker Compose, installs dependencies, generates app key, and runs migrations/seeders.
+
+Useful options:
+
+```bash
+OPPE_ENGINE=docker OPPE_DIR=./open-pos-printer-emulator \
+  curl -fsSL https://raw.githubusercontent.com/darkterminal/open-pos-printer-emulator/main/scripts/install.sh | bash
+```
+
+## Option B: Manual Setup
+
 ## Requirements
 
 - **[Kiri](https://runkiri.com/)** (default) or **[Docker Compose](https://docs.docker.com/compose/)**
 - Ports available: `8080` (web), `8081` ([Reverb](https://reverb.laravel.com/)), `9100` (TCP listener), `3001` (sidecar), `5432` ([PostgreSQL](https://www.postgresql.org/))
 - `nc` (netcat) for the quick TCP smoke test (optional)
 
-## 1. Prepare Environment Files
+### 1. Prepare Environment Files
 
 ```bash
 cp apps/web/.env.example apps/web/.env
 cp apps/sidecar/.env.example apps/sidecar/.env
 ```
 
-## 2. Start the Stack
+### 2. Start the Stack
 
 **Kiri (default):**
 
@@ -41,7 +60,7 @@ make ps
 # or: make ps ENGINE=docker
 ```
 
-## 3. Initialize the Laravel App
+### 3. Initialize the Laravel App
 
 Run these commands using the same engine you started with.
 
@@ -61,7 +80,7 @@ docker compose exec web php artisan key:generate
 docker compose exec web php artisan migrate --seed
 ```
 
-## 4. Open the Web UI
+## Open the Web UI
 
 Open `http://localhost:8080/login` in your browser.
 
@@ -72,7 +91,7 @@ Open `http://localhost:8080/login` in your browser.
 
 ![Login page](../../images/screenshots/guide-login.png)
 
-## 5. Send Your First Test Print
+## Send Your First Test Print
 
 Send a simple ESC/POS payload to the default TCP listener on port `9100`:
 
@@ -91,7 +110,7 @@ flowchart LR
 
 ![Jobs workspace with receipt preview](../../images/screenshots/guide-jobs-workspace.png)
 
-## 6. Where to Go Next
+## Where to Go Next
 
 - **[User guide](user-guide.md)** — step-by-step walkthrough of Jobs, Listeners, and Printer Profiles.
 - **[Integration with ESC/POS Printer Server](integration-escpos-printer-server.md)** — send real POS-style receipts through EPS into OPPE.

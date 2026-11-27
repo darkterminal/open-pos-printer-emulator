@@ -2,19 +2,19 @@
 
 Open POS Printer Emulator is a self-hosted open-source web application for testing ESC/POS integrations without physical printers. A POS application can send an ESC/POS byte stream over raw TCP/IP to a configurable port (default `9100`), and developers can inspect a live receipt preview, command inspector, raw hex/ASCII, and job history in the browser.
 
-> Status: **MVP in progress**. The repo stays private until it is ready to be published.
+> **Development tool only.** Open POS Printer Emulator is intended for local development, QA, and integration testing. It is **not recommended for production deployment** or for exposing to untrusted networks.
 
-## MVP Goals
+## Core Capabilities
 
-- TCP ESC/POS listener (default 9100)
-- ESC/POS command subset parsing
-- Real-time live receipt preview
-- Command inspector and raw data viewer
-- Job history per listener
-- Printer profiles
-- Fault simulation
-- PDF/image export
-- Simple user authentication
+- **TCP ESC/POS listener** (default `9100`) with configurable listeners
+- **ESC/POS parsing** for a practical command subset, with warnings for unsupported/partial cases
+- **Live receipt preview** in the browser
+- **Command inspector** and raw hex/base64 viewer
+- **Job history** with filters, search, and detail views
+- **Printer profiles** seeded from [mike42/escpos-php](https://github.com/mike42/escpos-php) supported printers
+- **Fault simulation** (paper out, cover open, cutter error, offline)
+- **Export/print** receipt preview (browser print/PDF and client-side exports)
+- **Simple local authentication** for the web UI
 
 ## Stack
 
@@ -40,11 +40,37 @@ Open POS Printer Emulator is a self-hosted open-source web application for testi
 └── Makefile                  # Task wrapper
 ```
 
-## Quick Start
+## Quick Install (Development)
+
+The fastest way to get started is the installer script. It clones the repo, prepares env files, starts the stack, installs dependencies, and runs migrations.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/darkterminal/open-pos-printer-emulator/main/scripts/install.sh | bash
+```
+
+Optional environment variables:
+
+```bash
+OPPE_ENGINE=docker \
+OPPE_DIR=./open-pos-printer-emulator \
+OPPE_BRANCH=main \
+curl -fsSL https://raw.githubusercontent.com/darkterminal/open-pos-printer-emulator/main/scripts/install.sh | bash
+```
+
+- `OPPE_ENGINE`: `kiri` or `docker` (default: auto-detect, prefers `kiri`)
+- `OPPE_DIR`: install directory (default: `./open-pos-printer-emulator`)
+- `OPPE_BRANCH`: branch/tag to checkout (default: `main`)
+- `OPPE_NO_START=1`: clone/prepare only, skip container startup
+
+> The installer is for **local development**. Review the script before running it if you prefer: [`scripts/install.sh`](scripts/install.sh).
+
+## Manual Quick Start
 
 Choose your container engine. Both [Kiri](https://runkiri.com/) and [Docker Compose](https://docs.docker.com/compose/) are supported.
 
 ```bash
+git clone https://github.com/darkterminal/open-pos-printer-emulator.git
+cd open-pos-printer-emulator
 cp apps/web/.env.example apps/web/.env
 cp apps/sidecar/.env.example apps/sidecar/.env
 
@@ -78,9 +104,9 @@ printf "\x1B\x40Hello ESC/POS\n\x1D\x56\x00" | nc 127.0.0.1 9100
 
 Open `/jobs` (Inertia default) or `/jobs?ui=blade` for the Blade fallback.
 
-## Current Features
+## Feature Details
 
-- **TCP ingest:** listener 9100 + finalize on idle timeout/client close; raw payload is preserved even when parsing fails.
+- **TCP ingest:** listener `9100` by default; finalize on idle timeout/client close; raw payload is preserved even when parsing fails.
 - **ESC/POS subset parser:** init, align, bold/underline, text size, line spacing/feed, HT/ESC D tabs, ESC $/ positioning, cut, cash drawer, barcode/QR/image placeholders, DLE EOT status, codepages CP437/CP850/CP858/CP1252/ISO-8859-1.
 - **Raster/image:** `GS v 0` and `ESC *` (supported 8-dot/24-dot modes; other modes emit warnings) are rendered as previews; `GS ( L` raster subset is supported best-effort with placeholder/warning fallback for unsupported variants.
 - **Internal Laravel ingest:** token auth, payload validation, idempotent `external_id`, SHA-256 checksum.
@@ -89,7 +115,7 @@ Open `/jobs` (Inertia default) or `/jobs?ui=blade` for the Blade fallback.
 - **Job detail:** receipt preview, command inspector, warnings, raw base64, Print/Save PDF and client-side PNG/text export.
 - **Listener management:** CRUD/edit/delete listeners, sidecar status, heartbeat, last error, fault simulation toggles (paper_out, cover_open, cutter_error, offline), manual sync.
 - **Sidecar control:** ensure/start/stop/update faults. Laravel internal listener status ingest + bootstrap endpoints. `sidecar:sync-listeners` runs on web startup and is scheduled every minute.
-- **Printer Profiles MVP:** CRUD profiles (built-in profiles are not editable/deletable; profiles used by listeners are not deletable). Built-in catalog seeded from [mike42/escpos-php supported printers](https://github.com/mike42/escpos-php#printers).
+- **Printer profiles:** CRUD profiles (built-in profiles are not editable/deletable; profiles used by listeners are not deletable). Built-in catalog seeded from [mike42/escpos-php supported printers](https://github.com/mike42/escpos-php#printers).
 - **Auth/ownership scoping:** listener/job/printer profile queries and mutations are limited to the authenticated user; built-in printer profiles remain readable.
 - **Ops hardening:** `print_jobs` indexes for history/feed queries, `jobs:prune --days= --dry-run` command, `PRINT_JOBS_RETENTION_DAYS` env (default 30), daily prune schedule at 03:30.
 - **Default UI:** Inertia React + shadcn/ui on `/jobs`, `/jobs/{id}`, `/listeners`, `/printer-profiles`. Blade fallback available via `?ui=blade`.
@@ -256,6 +282,14 @@ Smoke covers: admin login, jobs page, printer profile create, TCP ingest, job de
 - **Sidecar status stale**: run `kiri compose exec web php artisan sidecar:sync-listeners` (or `docker compose exec ...`).
 - **Retention/prune**: check `PRINT_JOBS_RETENTION_DAYS`; dry-run safely with `kiri compose exec web php artisan jobs:prune --dry-run` (or `docker compose exec ...`).
 - **E2E flakiness**: ensure web/reverb/sidecar/db are healthy, ports 8080/8081/9100/3001 are free, and use the trace in `apps/web/test-results` on failure.
+
+## Open Source
+
+- [Contributing guide](CONTRIBUTING.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Security policy](SECURITY.md)
+- [Support](SUPPORT.md)
+- [Changelog](CHANGELOG.md)
 
 ## License
 

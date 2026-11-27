@@ -17,6 +17,8 @@ This directory contains user and technical documentation for Open POS Printer Em
 
 Open POS Printer Emulator is a self-hosted web application for testing ESC/POS integrations without a physical thermal printer.
 
+> **Development only:** intended for local development, QA, and integration testing. Not recommended for production deployment.
+
 Basic flow:
 
 1. A POS/client sends raw ESC/POS bytes to the emulator's TCP listener (default port `9100`).
