@@ -48,6 +48,10 @@ class ListenerController extends Controller
 
         return Inertia::render('Listeners/Index', [
             'profiles' => $profiles,
+            'tcp_port_range' => [
+                'min' => (int) config('services.sidecar.tcp_port_range_min', 9100),
+                'max' => (int) config('services.sidecar.tcp_port_range_max', 9199),
+            ],
             'listeners' => $listeners->map(fn (Listener $listener) => [
                 'id' => $listener->id,
                 'external_id' => $listener->external_id,
@@ -68,10 +72,18 @@ class ListenerController extends Controller
 
     public function store(Request $request, SidecarClient $sidecar): RedirectResponse
     {
+        $min = (int) config('services.sidecar.tcp_port_range_min', 9100);
+        $max = (int) config('services.sidecar.tcp_port_range_max', 9199);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'host' => ['required', 'string', 'max:255'],
-            'port' => ['required', 'integer', 'between:1,65535', Rule::unique('listeners', 'port')->where(fn ($q) => $q->where('host', $request->input('host')))],
+            'port' => [
+                'required',
+                'integer',
+                "between:{$min},{$max}",
+                Rule::unique('listeners', 'port')->where(fn ($q) => $q->where('host', $request->input('host'))),
+            ],
             'printer_profile_id' => ['nullable', 'integer', 'exists:printer_profiles,id'],
         ]);
 
@@ -134,13 +146,16 @@ class ListenerController extends Controller
     public function update(Request $request, Listener $listener, SidecarClient $sidecar): RedirectResponse
     {
         abort_unless($listener->user_id === $request->user()->id, 403);
+        $min = (int) config('services.sidecar.tcp_port_range_min', 9100);
+        $max = (int) config('services.sidecar.tcp_port_range_max', 9199);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'host' => ['required', 'string', 'max:255'],
             'port' => [
                 'required',
                 'integer',
-                'between:1,65535',
+                "between:{$min},{$max}",
                 Rule::unique('listeners', 'port')
                     ->where(fn ($q) => $q->where('host', $request->input('host')))
                     ->ignore($listener->id),

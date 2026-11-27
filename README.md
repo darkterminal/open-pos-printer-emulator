@@ -89,10 +89,123 @@ Open `/jobs` (Inertia default) or `/jobs?ui=blade` for the Blade fallback.
 - **Job detail:** receipt preview, command inspector, warnings, raw base64, Print/Save PDF and client-side PNG/text export.
 - **Listener management:** CRUD/edit/delete listeners, sidecar status, heartbeat, last error, fault simulation toggles (paper_out, cover_open, cutter_error, offline), manual sync.
 - **Sidecar control:** ensure/start/stop/update faults. Laravel internal listener status ingest + bootstrap endpoints. `sidecar:sync-listeners` runs on web startup and is scheduled every minute.
-- **Printer Profiles MVP:** CRUD profiles (built-in profiles are not editable/deletable; profiles used by listeners are not deletable).
+- **Printer Profiles MVP:** CRUD profiles (built-in profiles are not editable/deletable; profiles used by listeners are not deletable). Built-in catalog seeded from [mike42/escpos-php supported printers](https://github.com/mike42/escpos-php#printers).
 - **Auth/ownership scoping:** listener/job/printer profile queries and mutations are limited to the authenticated user; built-in printer profiles remain readable.
 - **Ops hardening:** `print_jobs` indexes for history/feed queries, `jobs:prune --days= --dry-run` command, `PRINT_JOBS_RETENTION_DAYS` env (default 30), daily prune schedule at 03:30.
 - **Default UI:** Inertia React + shadcn/ui on `/jobs`, `/jobs/{id}`, `/listeners`, `/printer-profiles`. Blade fallback available via `?ui=blade`.
+
+## ESC/POS Printer Server Integration
+
+Open POS Printer Emulator can act as an ethernet target for [ESC/POS Printer Server](https://github.com/darkterminal/escpos-printer-server). This enables end-to-end testing without physical printers.
+
+```text
+POS/Web App -> WebSocket (JSON) -> ESC/POS Printer Server -> raw ESC/POS TCP -> Open POS Printer Emulator -> Jobs UI
+```
+
+### Quick E2E
+
+```bash
+# Terminal 1: emulator
+make up
+
+# Terminal 2: ESC/POS Printer Server
+php eps --role ws --host 127.0.0.1 --port 1945 --log-dir /tmp/eps-logs start
+
+# Terminal 3: send sample payload
+node examples/escpos-printer-server/send-job.mjs
+```
+
+Sample payload key fields:
+
+```json
+{
+  "printer_settings": {
+    "interface": "ethernet",
+    "printer_host": "127.0.0.1",
+    "printer_port": 9100,
+    "template": "epson"
+  },
+  "receipt_data": {
+    "transaction": {
+      "paid_return": 5000
+    }
+  }
+}
+```
+
+See [`examples/escpos-printer-server/`](examples/escpos-printer-server/) and [docs integration guide](docs/user-manual/integration-escpos-printer-server.md) for full payload and troubleshooting.
+
+## Supported Printer Profiles (escpos-php)
+
+Printer profiles are seeded from mike42/escpos-php's supported printer list. OPPE stores profile metadata (paper width, chars/line, DPI, dots, codepage) for emulator/listener mapping; actual rendering is best-effort by the OPPE parser/preview.
+
+<details>
+<summary>Show supported printer list</summary>
+
+- 3nStar RPT-008
+- Approx APPPOS80AM
+- AURES ODP-333 / ODP-500
+- Bematech-4200-TH / LR2000E
+- Birch PRP-085III
+- Bixolon SRP-350III / SRP-350Plus
+- Black Copper BC-85AC
+- CHD TH-305N
+- Citizen CBM1000-II / CT-S310II
+- Dapper-Geyi Q583P
+- Daruma DR800
+- DR-MP200
+- EPOS TEP 220M
+- Elgin i9
+- Epson EU-T332C, FX-890, TM-T20/T20II, TM-T70/T70II, TM-T81, TM-T82II, TM-T88II/III/IV/V, TM-U220, TM-U295, TM-U590/TM-U590P
+- Equal (EQ-IT-001) POS-58
+- Everycom EC-58
+- Excelvan HOP-E200 / HOP-E58 / HOP-E801
+- Gainscha GP-2120TF / GP-5890x / GP-U80300I
+- gprinter GP-U80160I
+- HOIN HOP-H58
+- Ithaca iTherm 28
+- Hasar HTP 250
+- Metapace T-1 / T-25
+- Nexa PX700
+- Nyear NP100
+- OKI RT322 / 80 Plus III
+- Orient BTP-R580
+- P-822D / P85A-401
+- Partner Tech RP320
+- POSLIGNE ODP200H-III-G
+- QPOS Q58M
+- Rongta RP326US / RP58-U / RP80USE
+- SAM4S GIANT-100DB
+- Senor TP-100
+- Sewoo SLK-TS400
+- SEYPOS PRP-96 / PRP-300
+- SNBC BTP-R880NPIII
+- Solux SX-TP-88300
+- Sicar POS-80
+- Silicon SP-201 / RP80USE
+- SPRT SP-POS88V
+- Star BSC10, TSP100 ECO, TSP100III FuturePRNT, TSP-650, TUP-592
+- TVS RP45 Shoppe
+- Venus V248T
+- Xeumior SM-8330
+- Xprinter F-900, XP-365B, XP-58 Series, XP-80C, XP-90, XP-Q20011, XP-Q800
+- Zjiang NT-58H, ZJ-5870, ZJ-5890, ZJ-8220, ZJ-8250
+
+</details>
+
+## Screenshots
+
+| Printer Profiles | Listeners |
+|---|---|
+| ![Printer profiles](docs/images/screenshots/printer-profiles.png) | ![Listeners](docs/images/screenshots/listeners.png) |
+
+| TM-T88V / 9101 | TM-U220 / 9102 |
+|---|---|
+| ![TM-T88V job](docs/images/screenshots/job-tm-t88v.png) | ![TM-U220 job](docs/images/screenshots/job-tm-u220.png) |
+
+| ZJ-5890 / 9103 | Star TSP100III / 9104 |
+|---|---|
+| ![ZJ-5890 job](docs/images/screenshots/job-zj5890.png) | ![TSP100III job](docs/images/screenshots/job-tsp100iii.png) |
 
 ## Testing & Checks
 

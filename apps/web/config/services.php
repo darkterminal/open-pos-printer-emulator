@@ -39,6 +39,8 @@ return [
         'shared_token' => env('SIDECAR_SHARED_TOKEN'),
         'internal_url' => env('SIDECAR_INTERNAL_URL', 'http://sidecar:3001'),
         'max_payload_bytes' => (int) env('SIDECAR_MAX_PAYLOAD_BYTES', 1048576),
+        'tcp_port_range_min' => (int) env('SIDECAR_TCP_PORT_RANGE_MIN', 9100),
+        'tcp_port_range_max' => (int) env('SIDECAR_TCP_PORT_RANGE_MAX', 9199),
     ],
 
     'print_jobs' => [

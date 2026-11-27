@@ -13,7 +13,7 @@ export interface TcpServerHandle {
   getStatus: () => { host: string; port: number; listening: boolean };
 }
 
-export function createTcpServer(getFaultConfig?: () => FaultConfig): TcpServerHandle {
+export function createTcpServer(getFaultConfig?: () => FaultConfig, listenerExternalId: string = config.listenerExternalId): TcpServerHandle {
   const server = net.createServer((socket) => {
     const faults = getFaultConfig?.() ?? DEFAULT_FAULT_CONFIG;
     if (faults.offline) {
@@ -56,7 +56,7 @@ export function createTcpServer(getFaultConfig?: () => FaultConfig): TcpServerHa
         schema_version: '1.0',
         correlation_id: correlationId,
         external_id: externalId,
-        listener_external_id: config.listenerExternalId,
+        listener_external_id: listenerExternalId,
         received_at: receivedAt,
         completed_at: completedAt,
         source: { ip: remoteIp, port: remotePort },

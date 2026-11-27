@@ -1,0 +1,39 @@
+{
+  "from": "posclient",
+  "printer_name": "OPPE-9100",
+  "printer_settings": {
+    "interface": "ethernet",
+    "printer_host": "127.0.0.1",
+    "printer_port": 9100,
+    "template": "epson",
+    "pull_cash_drawer": false
+  },
+  "receipt_data": {
+    "app_name": "Coffee POS",
+    "store_address": "Jl. Industrial No. 1",
+    "full_name": "Operator Demo",
+    "transaction": {
+      "date_transaction": "2026-11-27",
+      "transaction": "INV-E2E-001",
+      "tax": 0,
+      "total_transaction": 15000,
+      "paid": 20000,
+      "paid_return": 5000,
+      "payment": "Cash"
+    },
+    "cart": [
+      {
+        "item_name": "Espresso",
+        "price": 5000,
+        "qty": 2,
+        "sub_total": 10000
+      },
+      {
+        "item_name": "Mineral Water",
+        "price": 5000,
+        "qty": 1,
+        "sub_total": 5000
+      }
+    ]
+  }
+}

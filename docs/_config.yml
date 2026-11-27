@@ -1,0 +1,35 @@
+title: Open POS Printer Emulator
+tagline: Self-hosted ESC/POS emulator for testing without physical printers
+description: >-
+  A self-hosted open-source web application for testing ESC/POS integrations
+  without physical printers. Send raw ESC/POS over TCP, inspect jobs, preview
+  receipts, and debug commands in real time.
+author: Imam Ali Mustofa
+lang: en
+timezone: UTC
+url: https://darkterminal.github.io
+baseurl: "/open-pos-printer-emulator"
+markdown: kramdown
+kramdown:
+  input: GFM
+  hard_wrap: false
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    block:
+      line_numbers: false
+permalink: pretty
+exclude:
+  - README.md
+  - Gemfile
+  - Gemfile.lock
+  - vendor
+  - .jekyll-cache
+  - _site
+  - integration-escpos-printer-server.md
+  - technical-guide.md
+  - user-guide.md
+defaults:
+  - scope:
+      path: "user-manual"
+    values:
+      layout: manual

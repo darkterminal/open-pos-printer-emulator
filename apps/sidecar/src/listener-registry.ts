@@ -38,7 +38,7 @@ export class ListenerRegistry {
 
   constructor() {
     const externalId = config.listenerExternalId;
-    const tcp = createTcpServer(() => this.getFaults(externalId));
+    const tcp = createTcpServer(() => this.getFaults(externalId), externalId);
     this.listeners.set(externalId, {
       info: {
         external_id: externalId,
@@ -167,7 +167,16 @@ export class ListenerRegistry {
       throw new Error(entry.info.last_error);
     }
 
-    const tcp = createTcpServer(() => this.getFaults(externalId));
+    const { min, max } = config.tcpPortRange;
+    if (port < min || port > max) {
+      const msg = `Port ${port} is outside allowed TCP port range ${min}-${max}.`;
+      entry.info.status = 'error';
+      entry.info.last_error = msg;
+      this.listeners.set(externalId, entry);
+      throw new Error(msg);
+    }
+
+    const tcp = createTcpServer(() => this.getFaults(externalId), externalId);
     entry.tcp = tcp;
     this.listeners.set(externalId, entry);
 

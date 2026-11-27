@@ -3,24 +3,26 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 
 export function ThemeToggle() {
-  const [dark, setDark] = useState(() => typeof document !== 'undefined' && document.documentElement.classList.contains('dark'));
+    const [dark, setDark] = useState(
+        () => typeof document !== 'undefined' && document.documentElement.classList.contains('dark'),
+    );
 
-  function toggle() {
-    const next = !document.documentElement.classList.contains('dark');
-    document.documentElement.classList.toggle('dark', next);
-    localStorage.setItem('theme', next ? 'dark' : 'light');
-    setDark(next);
-  }
+    function toggle() {
+        const next = !document.documentElement.classList.contains('dark');
+        document.documentElement.classList.toggle('dark', next);
+        localStorage.setItem('theme', next ? 'dark' : 'light');
+        setDark(next);
+    }
 
-  return (
-    <Button
-      variant="ghost"
-      size="icon-sm"
-      onClick={toggle}
-      aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-      title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-    >
-      {dark ? <Sun className="size-4" /> : <Moon className="size-4" />}
-    </Button>
-  );
+    return (
+        <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={toggle}
+            aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+            {dark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+        </Button>
+    );
 }

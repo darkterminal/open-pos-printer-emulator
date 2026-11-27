@@ -47,6 +47,7 @@ class JobIngested implements ShouldBroadcastNow
             'warnings_count' => $job->warnings_count,
             'correlation_id' => $job->correlation_id,
             'received_at' => optional($job->received_at)->toIso8601String(),
+            'render_model' => $job->render_model_json ?? ['width_dots' => 576, 'lines' => [], 'actions' => []],
         ];
     }
 }

@@ -1,0 +1,18 @@
+- title: Overview
+  url: /user-manual/
+  section: Introduction
+- title: Getting started
+  url: /user-manual/getting-started/
+  section: Guide
+- title: User guide
+  url: /user-manual/user-guide/
+  section: Guide
+- title: Integration with ESC/POS Printer Server
+  url: /user-manual/integration-escpos-printer-server/
+  section: Integration
+- title: Technical guide
+  url: /user-manual/technical-guide/
+  section: Reference
+- title: Troubleshooting
+  url: /user-manual/troubleshooting/
+  section: Reference

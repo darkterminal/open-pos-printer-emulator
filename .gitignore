@@ -45,6 +45,14 @@ coverage/
 test-results/
 playwright-report/
 blob-report/
+oppe-docs-landing.png
+oppe-docs-manual.png
+
+# Docs (Jekyll)
+docs/_site/
+docs/.jekyll-cache/
+docs/.bundle/
+docs/vendor/
 
 # Kiri / Docker local overrides
 compose.override.yaml
