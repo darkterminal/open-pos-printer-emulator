@@ -56,7 +56,7 @@ jobs:
           docker compose -f compose.yaml -f compose.ci.yaml exec -T web php artisan optimize:clear
           docker compose -f compose.yaml -f compose.ci.yaml exec -T web php artisan migrate --force
           docker compose -f compose.yaml -f compose.ci.yaml exec -T web php artisan db:seed --force
-          docker compose -f compose.yaml -f compose.ci.yaml exec -T web npm ci
+          docker compose -f compose.yaml -f compose.ci.yaml exec -T web sh -lc 'if [ ! -d node_modules ] || [ -z "$(ls -A node_modules 2>/dev/null)" ]; then npm ci; fi'
           docker compose -f compose.yaml -f compose.ci.yaml exec -T web npm run build
 
       - name: Wait for web
@@ -74,6 +74,7 @@ jobs:
       - name: Install Playwright
         working-directory: apps/web
         run: |
+          sudo chown -R runner:runner node_modules || true
           npm ci
           npx playwright install --with-deps chromium
 
