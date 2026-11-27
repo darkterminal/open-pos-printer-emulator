@@ -7,7 +7,8 @@ eyebrow: For developers
 
 ## Architecture
 
-> Docs: [Jekyll](https://jekyllrb.com/) · [Mermaid](https://mermaid.js.org/) diagrams · [Playwright](https://playwright.dev/) E2E · [Prettier](https://prettier.io/) formatting
+> Docs: [Jekyll](https://jekyllrb.com/) · [Mermaid](https://mermaid.js.org/) diagrams · [Playwright](https://playwright.dev/) E2E · [Prettier](https://prettier.io/) formatting  
+> Windows local mode: see [Windows distribution target](windows-distribution.md).
 
 <div class="mermaid">
 flowchart LR

@@ -9,7 +9,7 @@ eyebrow: Roadmap
 
 Keep the **current OPPE stack** as the primary mode for **MacOS/Linux** (and container-based workflows), while defining a separate **Windows distribution target** for POS environments where Docker/Kiri is not practical.
 
-This page is a planning target, not a shipped Windows binary yet.
+This page started as a planning target. An **MVP Windows agent** now lives in [`apps/windows-agent`](../../apps/windows-agent/) with a local TCP listener, SQLite storage, and a simple web UI. It is not yet feature-parity with the MacOS/Linux container mode.
 
 ## Why a separate Windows target
 
@@ -90,12 +90,28 @@ Deferred initially:
 - Rewriting all Laravel/React features into Rust before validating demand.
 - Promising full hardware-identical ESC/POS rendering on Windows local mode.
 
+## Current MVP (in repo)
+
+An initial Rust agent is available at `apps/windows-agent/`:
+
+- TCP ESC/POS listener (`OPPE_TCP_PORT`, default `9100`)
+- Local HTTP UI/API (`OPPE_HTTP_HOST`/`OPPE_HTTP_PORT`, default `127.0.0.1:8080`)
+- SQLite local storage (`OPPE_DB_PATH`)
+- Basic parser/preview for common commands (text, align, style, feed, cut, basic image placeholders)
+- GitHub Actions workflow: `.github/workflows/windows-agent.yml`
+
+Run locally:
+
+```bash
+cargo run --manifest-path apps/windows-agent/Cargo.toml
+```
+
 ## Next actions
 
-1. Create a PoC spike: Windows single-process TCP listener + SQLite + minimal web preview.
-2. Measure packaging options: Rust-native vs FrankenPHP-assisted Laravel subset.
+1. Expand parser parity with `apps/sidecar` (golden fixtures, raster/barcode/QR/codepages).
+2. Add Windows packaging: installer/MSI, tray/service mode, auto-start, logs/diagnostics.
 3. Define feature parity matrix: container mode vs Windows local mode.
-4. Add CI artifact build only after PoC passes basic E2E smoke.
+4. Add Windows E2E smoke tests and signed release artifacts.
 
 <div class="support-callout">
   <p><strong>Status:</strong> Planning target. Current stable workflow remains MacOS/Linux with <a href="https://runkiri.com/">Kiri</a> / <a href="https://docs.docker.com/compose/">Docker Compose</a>.</p>

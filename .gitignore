@@ -36,6 +36,12 @@ apps/sidecar/node_modules/
 apps/sidecar/dist/
 apps/sidecar/coverage/
 
+# Windows agent (Rust)
+apps/windows-agent/target/
+apps/windows-agent/*.db
+apps/windows-agent/*.db-shm
+apps/windows-agent/*.db-wal
+
 # Frontend / tooling
 node_modules/
 dist/

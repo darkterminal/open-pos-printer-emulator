@@ -31,9 +31,10 @@ Open POS Printer Emulator is a self-hosted open-source web application for testi
 .
 ├── apps/
 │   ├── web/                  # Laravel + Inertia React + shadcn/ui (Blade fallback)
-│   └── sidecar/              # Node.js TCP listener + ESC/POS parser
+│   ├── sidecar/              # Node.js TCP listener + ESC/POS parser
+│   └── windows-agent/        # Windows local MVP agent (Rust, SQLite, embedded UI)
 ├── docker/                   # Container/runtime configuration
-├── .github/workflows/        # CI (lint/test) + E2E smoke workflow
+├── .github/workflows/        # CI, E2E, Windows agent workflows
 ├── .internal/                # Internal planning docs (gitignored)
 ├── compose.yaml              # Kiri Compose
 ├── compose.ci.yaml           # CI override for Docker Compose E2E
@@ -43,6 +44,8 @@ Open POS Printer Emulator is a self-hosted open-source web application for testi
 ## Quick Start
 
 Choose your container engine. Both [Kiri](https://runkiri.com/) and [Docker Compose](https://docs.docker.com/compose/) are supported.
+
+> **Windows local mode (MVP):** A separate single-process Windows agent is available in [`apps/windows-agent`](apps/windows-agent/). It targets local POS environments where Docker/Kiri is not practical. The MacOS/Linux container stack remains the primary full-featured mode. See [Windows distribution target](docs/user-manual/windows-distribution.md).
 
 ```bash
 cp apps/web/.env.example apps/web/.env
