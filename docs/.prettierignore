@@ -1,0 +1,9 @@
+_site/
+.jekyll-cache/
+vendor/
+.bundle/
+node_modules/
+Gemfile.lock
+*.png
+*.ico
+*.svg

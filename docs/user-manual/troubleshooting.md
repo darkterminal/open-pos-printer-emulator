@@ -53,9 +53,11 @@ Configure `PRINT_JOBS_RETENTION_DAYS` in `apps/web/.env`.
 
 - Ensure stack is healthy at `localhost:8080`.
 - Ports `8080/8081/9100/3001` free.
-- Check Playwright traces in `apps/web/test-results`.
+- Check [Playwright](https://playwright.dev/) traces in `apps/web/test-results`.
 
 ## Docker/Kiri Networking Confusion
+
+If using [Docker Compose](https://docs.docker.com/compose/) or [Kiri](https://runkiri.com/), remember container networking differs from host networking.
 
 - `127.0.0.1` means "this same container/machine". From inside a container, it does not point to your host unless specially mapped.
 - For container-to-host access, use the runtime-appropriate host alias (often `host.docker.internal`) or attach services to the same network and use service names.

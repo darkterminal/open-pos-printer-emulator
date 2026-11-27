@@ -1,0 +1,12 @@
+{
+  "name": "oppe-docs",
+  "private": true,
+  "scripts": {
+    "format": "prettier --write \"**/*.{md,html,css,js,yml,yaml}\" --ignore-path .prettierignore",
+    "format:check": "prettier --check \"**/*.{md,html,css,js,yml,yaml}\" --ignore-path .prettierignore"
+  },
+  "devDependencies": {
+    "@shopify/prettier-plugin-liquid": "^1.10.0",
+    "prettier": "^3.6.2"
+  }
+}

@@ -13,13 +13,17 @@ Instead of printing to hardware during development or QA, your POS/application s
 
 ## How It Works
 
-```text
-POS / Application
-  -> sends ESC/POS bytes over TCP (default port 9100)
-  -> Open POS Printer Emulator receives and parses the data
-  -> Job appears in the Web UI (/jobs)
-  -> You review Receipt Preview, Warnings, and Raw Data
-```
+The system uses a [Node.js](https://nodejs.org/) sidecar for TCP/ESC-POS parsing, [Laravel](https://laravel.com/) for ingest/storage, and [Laravel Reverb](https://reverb.laravel.com/) for realtime updates.
+
+<div class="mermaid">
+flowchart LR
+    A["POS / Application"] -->|"ESC/POS bytes over TCP<br/>default port 9100"| B["Open POS Printer Emulator"]
+    B --> C["Parse &amp; store job"]
+    C --> D["Web UI /jobs"]
+    D --> E["Receipt Preview<br/>Warnings / Raw Data"]
+</div>
+
+<p class="diagram-caption">Data flow from your POS/application to the receipt preview in the browser.</p>
 
 ## Who Is This For?
 
@@ -55,7 +59,7 @@ The Jobs Workspace is the main screen: job history on the left, receipt preview 
 - **Realtime updates** — new jobs appear live (with polling fallback).
 - **Listeners & printer profiles** — manage ports and printer presets.
 - **Fault simulation** — simulate printer errors like paper out or cover open.
-- **Self-hosted** — run locally with Kiri or Docker Compose.
+- **Self-hosted** — run locally with [Kiri](https://runkiri.com/) or [Docker Compose](https://docs.docker.com/compose/).
 
 ## Documentation Map
 
@@ -65,4 +69,9 @@ The Jobs Workspace is the main screen: job history on the left, receipt preview 
 | **[User guide](user-guide.md)** | Step-by-step web UI guide for non-technical users. |
 | **[Integration with ESC/POS Printer Server](integration-escpos-printer-server.md)** | End-to-end POS-like integration example. |
 | **[Technical guide](technical-guide.md)** | Architecture, config, internal contract, and commands. |
+| **[Windows distribution target](windows-distribution.md)** | Planned Windows local distribution while keeping MacOS/Linux container mode. |
 | **[Troubleshooting](troubleshooting.md)** | Common issues and fixes. |
+
+<div class="support-callout">
+  <p><strong>Support this project</strong> — Open POS Printer Emulator is free and open source. If it saves you time, consider <a href="https://github.com/sponsors/darkterminal" target="_blank" rel="noopener noreferrer">sponsoring @darkterminal</a> or starring the repo on <a href="https://github.com/darkterminal/open-pos-printer-emulator" target="_blank" rel="noopener noreferrer">GitHub</a>.</p>
+</div>

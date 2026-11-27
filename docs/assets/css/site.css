@@ -644,6 +644,39 @@ img {
     border-radius: 0;
 }
 
+/* Support callout */
+.support-callout {
+    margin: 32px 0 8px;
+    padding: 14px 18px;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--accent-soft) 45%, var(--bg-elevated));
+    color: var(--text-muted);
+    font-size: 14px;
+}
+.support-callout p { margin: 0; }
+.support-callout a { font-weight: 600; }
+
+/* Mermaid diagrams */
+.mermaid {
+    margin: 24px 0 28px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-elevated);
+    box-shadow: var(--shadow);
+    overflow-x: auto;
+    text-align: center;
+}
+.mermaid svg { max-width: 100%; height: auto; }
+.diagram-caption {
+    margin: -14px 0 24px;
+    color: var(--text-faint);
+    font-size: 13px;
+    text-align: center;
+}
+
 /* Screenshots */
 
 .screenshot,

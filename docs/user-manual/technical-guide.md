@@ -7,22 +7,25 @@ eyebrow: For developers
 
 ## Architecture
 
-```text
-POS / Client
-  -> raw ESC/POS over TCP (default 9100)
-  -> Node.js sidecar (apps/sidecar)
-  -> internal HTTP ingest (Laravel API, token-auth)
-  -> Laravel stores print_jobs + broadcasts events
-  -> Inertia React UI (Jobs, Listeners, Printer Profiles)
-```
+> Docs: [Jekyll](https://jekyllrb.com/) · [Mermaid](https://mermaid.js.org/) diagrams · [Playwright](https://playwright.dev/) E2E · [Prettier](https://prettier.io/) formatting
+
+<div class="mermaid">
+flowchart LR
+    A["POS / Client"] -->|"Raw ESC/POS<br/>TCP 9100"| B["Node.js sidecar<br/>apps/sidecar"]
+    B -->|"Internal HTTP ingest<br/>token-auth"| C["Laravel API"]
+    C --> D["Store print_jobs<br/>+ broadcast events"]
+    D --> E["Inertia React UI<br/>Jobs / Listeners / Profiles"]
+</div>
+
+<p class="diagram-caption">Technical flow: TCP ingest → sidecar parsing → Laravel ingest/storage → realtime UI.</p>
 
 ## Stack
 
-- **Backend**: Laravel 12, PHP 8.4+
-- **Frontend**: Inertia.js v2, React 19, TypeScript, Tailwind, shadcn/ui
-- **Realtime**: Laravel Reverb + Laravel Echo
-- **Parser/Listener**: Node.js TypeScript sidecar
-- **DB**: PostgreSQL (dev/prod), SQLite `:memory:` for tests
+- **Backend**: [Laravel](https://laravel.com/) 12, [PHP](https://www.php.net/) 8.4+
+- **Frontend**: [Inertia.js](https://inertiajs.com/) v2, [React](https://react.dev/) 19, [TypeScript](https://www.typescriptlang.org/), [Tailwind CSS](https://tailwindcss.com/), [shadcn/ui](https://ui.shadcn.com/)
+- **Realtime**: [Laravel Reverb](https://reverb.laravel.com/) + [Laravel Echo](https://laravel.com/docs/broadcasting#client-side-installation)
+- **Parser/Listener**: [Node.js](https://nodejs.org/) TypeScript sidecar
+- **DB**: [PostgreSQL](https://www.postgresql.org/) (dev/prod), [SQLite](https://www.sqlite.org/) `:memory:` for tests
 
 ## Local Setup
 
@@ -47,7 +50,7 @@ kiri compose exec web php artisan migrate --seed
 | `make lint` | Pint + TS lint/checks |
 | `make e2e` | Playwright smoke tests |
 
-Use `ENGINE=docker` to run with Docker Compose.
+Use `ENGINE=docker` to run with [Docker Compose](https://docs.docker.com/compose/). [Kiri](https://runkiri.com/) is the default runtime.
 
 ## Configuration
 

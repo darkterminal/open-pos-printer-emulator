@@ -18,12 +18,12 @@ Open POS Printer Emulator is a self-hosted open-source web application for testi
 
 ## Stack
 
-- **Backend:** Laravel 12+ (PHP 8.4+)
-- **Frontend:** Inertia.js v2 + React 19 + TypeScript + shadcn/ui (default), Blade fallback (`?ui=blade`)
-- **Real-time:** Laravel Reverb + Laravel Echo
-- **TCP Listener & Parser:** Node.js TypeScript sidecar
-- **Database:** PostgreSQL (dev/prod container), SQLite `:memory:` for tests
-- **Orchestration:** Kiri Compose (Docker fallback for compatibility)
+- **Backend:** [Laravel](https://laravel.com/) 12+ ([PHP](https://www.php.net/) 8.4+)
+- **Frontend:** [Inertia.js](https://inertiajs.com/) v2 + [React](https://react.dev/) 19 + [TypeScript](https://www.typescriptlang.org/) + [shadcn/ui](https://ui.shadcn.com/) (default), Blade fallback (`?ui=blade`)
+- **Real-time:** [Laravel Reverb](https://reverb.laravel.com/) + [Laravel Echo](https://laravel.com/docs/broadcasting#client-side-installation)
+- **TCP Listener & Parser:** [Node.js](https://nodejs.org/) TypeScript sidecar
+- **Database:** [PostgreSQL](https://www.postgresql.org/) (dev/prod container), [SQLite](https://www.sqlite.org/) `:memory:` for tests
+- **Orchestration:** [Kiri](https://runkiri.com/) Compose ([Docker](https://www.docker.com/) Compose fallback for compatibility)
 
 ## Repository Structure
 
@@ -42,7 +42,7 @@ Open POS Printer Emulator is a self-hosted open-source web application for testi
 
 ## Quick Start
 
-Choose your container engine. Both Kiri and Docker Compose are supported.
+Choose your container engine. Both [Kiri](https://runkiri.com/) and [Docker Compose](https://docs.docker.com/compose/) are supported.
 
 ```bash
 cp apps/web/.env.example apps/web/.env
@@ -137,7 +137,7 @@ See [`examples/escpos-printer-server/`](examples/escpos-printer-server/) and [do
 
 ## Supported Printer Profiles (escpos-php)
 
-Printer profiles are seeded from mike42/escpos-php's supported printer list. OPPE stores profile metadata (paper width, chars/line, DPI, dots, codepage) for emulator/listener mapping; actual rendering is best-effort by the OPPE parser/preview.
+Printer profiles are seeded from [mike42/escpos-php](https://github.com/mike42/escpos-php)'s supported printer list. OPPE stores profile metadata (paper width, chars/line, DPI, dots, codepage) for emulator/listener mapping; actual rendering is best-effort by the OPPE parser/preview.
 
 <details>
 <summary>Show supported printer list</summary>
@@ -244,8 +244,8 @@ Smoke covers: admin login, jobs page, printer profile create, TCP ingest, job de
 
 ## CI
 
-- `.github/workflows/ci.yml`: web Pint + PHPUnit (SQLite `:memory:`), sidecar lint + Vitest.
-- `.github/workflows/e2e.yml`: Docker Compose stack (`compose.yaml` + `compose.ci.yaml`), migrate/seed/build, Playwright smoke, upload trace/logs on failure.
+- `.github/workflows/ci.yml`: web [Pint](https://laravel.com/docs/pint) + [PHPUnit](https://phpunit.de/) (SQLite `:memory:`), sidecar lint + [Vitest](https://vitest.dev/).
+- `.github/workflows/e2e.yml`: [Docker Compose](https://docs.docker.com/compose/) stack (`compose.yaml` + `compose.ci.yaml`), migrate/seed/build, [Playwright](https://playwright.dev/) smoke, upload trace/logs on failure.
 
 ## Troubleshooting
 

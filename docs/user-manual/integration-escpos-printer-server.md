@@ -9,14 +9,15 @@ eyebrow: End-to-end testing
 
 [ESC/POS Printer Server](https://github.com/darkterminal/escpos-printer-server) accepts print jobs (WebSocket JSON) and sends ESC/POS commands to a printer interface. Open POS Printer Emulator can act as that printer target.
 
-```text
-POS/Web App
-  -> WebSocket (JSON print job)
-  -> ESC/POS Printer Server
-  -> Ethernet TCP (raw ESC/POS)
-  -> Open POS Printer Emulator :9100
-  -> Jobs UI / preview / inspector
-```
+<div class="mermaid">
+flowchart LR
+    A["POS / Web App"] -->|"WebSocket JSON"| B["ESC/POS Printer Server"]
+    B -->|"Raw ESC/POS over TCP"| C["OPPE Listener :9100"]
+    C --> D["Parse &amp; store job"]
+    D --> E["Jobs UI<br/>Preview / Inspector / Raw"]
+</div>
+
+<p class="diagram-caption">End-to-end flow: POS payload → ESC/POS Printer Server → OPPE TCP listener → Jobs UI.</p>
 
 ## Prerequisites
 
@@ -118,13 +119,13 @@ node examples/escpos-printer-server/send-job.mjs
 
 ## Verified E2E Evidence (Playwright MCP)
 
-Representative real-payload smoke tests were executed from **ESC/POS Printer Server** to OPPE using the sample receipt payload structure (including `transaction.paid_return`). This is a documentation sample, not a full 91-profile screenshot matrix; all 91 escpos-php profiles were previously smoke-tested over TCP ingest.
+Representative real-payload smoke tests were executed from **ESC/POS Printer Server** to OPPE using the sample receipt payload structure (including `transaction.paid_return`). This is a documentation sample, not a full 91-profile screenshot matrix; all 91 [mike42/escpos-php](https://github.com/mike42/escpos-php) profiles were previously smoke-tested over TCP ingest.
 
 | Profile | Listener | EPS Result | Screenshot |
 |---|---:|---|---|
-| Generic ESC/POS | 9100 | `[SUCCESS] Receipt printed successfully` | ![EPS jobs overview](../images/screenshots/e2e-eps-jobs-overview.png) |
-| Epson TM-T88V | 9101 | `[SUCCESS] Receipt printed successfully` | ![EPS TM-T88V](../images/screenshots/e2e-eps-tm-t88v.png) |
-| Zjiang ZJ-5890 | 9103 | `[SUCCESS] Receipt printed successfully` | ![EPS ZJ-5890](../images/screenshots/e2e-eps-zj5890.png) |
+| Generic ESC/POS | 9100 | `[SUCCESS] Receipt printed successfully` | ![EPS jobs overview](../../images/screenshots/e2e-eps-jobs-overview.png) |
+| Epson TM-T88V | 9101 | `[SUCCESS] Receipt printed successfully` | ![EPS TM-T88V](../../images/screenshots/e2e-eps-tm-t88v.png) |
+| Zjiang ZJ-5890 | 9103 | `[SUCCESS] Receipt printed successfully` | ![EPS ZJ-5890](../../images/screenshots/e2e-eps-zj5890.png) |
 
 Additional successful profiles in the same run: **Epson TM-U220 (9102)** and **Star TSP100III FuturePRNT (9104)**.
 

@@ -9,8 +9,8 @@ This page helps you get the emulator running on your machine. If you only want t
 
 ## Requirements
 
-- **Kiri** (default) or **Docker Compose**
-- Ports available: `8080` (web), `8081` (Reverb), `9100` (TCP listener), `3001` (sidecar), `5432` (Postgres)
+- **[Kiri](https://runkiri.com/)** (default) or **[Docker Compose](https://docs.docker.com/compose/)**
+- Ports available: `8080` (web), `8081` ([Reverb](https://reverb.laravel.com/)), `9100` (TCP listener), `3001` (sidecar), `5432` ([PostgreSQL](https://www.postgresql.org/))
 - `nc` (netcat) for the quick TCP smoke test (optional)
 
 ## 1. Prepare Environment Files
@@ -70,7 +70,7 @@ Open `http://localhost:8080/login` in your browser.
 - **Email:** `admin@example.com`
 - **Password:** `password`
 
-![Login page](../images/screenshots/guide-login.png)
+![Login page](../../images/screenshots/guide-login.png)
 
 ## 5. Send Your First Test Print
 
@@ -82,7 +82,14 @@ printf "\x1B\x40Hello ESC/POS\n\x1D\x56\x00" | nc 127.0.0.1 9100
 
 Then open the **Jobs** page (`http://localhost:8080/jobs`). You should see a new job in the left panel and the receipt in the center preview.
 
-![Jobs workspace with receipt preview](../images/screenshots/guide-jobs-workspace.png)
+<div class="mermaid">
+flowchart LR
+    A["Your terminal / POS"] -->|"TCP 9100"| B["Sidecar listener"]
+    B --> C["Laravel ingest + parse"]
+    C --> D["Jobs UI<br/>Receipt Preview"]
+</div>
+
+![Jobs workspace with receipt preview](../../images/screenshots/guide-jobs-workspace.png)
 
 ## 6. Where to Go Next
 

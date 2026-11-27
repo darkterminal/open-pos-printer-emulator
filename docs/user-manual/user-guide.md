@@ -31,7 +31,7 @@ This guide is written for **non-technical users** who want to use the web UI to 
 
 After signing in, you will be taken to the **Jobs Workspace**.
 
-![Login page](../images/screenshots/guide-login.png)
+![Login page](../../images/screenshots/guide-login.png)
 
 ### Step 2 — Understand the Jobs Workspace
 
@@ -46,7 +46,7 @@ The **Jobs** page is the main screen. It is divided into three areas:
 
 At the top, you’ll see the live connection indicator and total job count.
 
-![Jobs workspace overview](../images/screenshots/guide-jobs-workspace.png)
+![Jobs workspace overview](../../images/screenshots/guide-jobs-workspace.png)
 
 ### Step 3 — Make Sure a Print Job Arrives
 
@@ -64,7 +64,7 @@ After the job is received:
 - A new job appears in the **Job History** list on the left.
 - The receipt appears in the **Receipt Preview** when selected.
 
-> **Tip:** If you use Docker/Kiri, make sure the emulator stack is running and port `9100` is exposed.
+> **Tip:** If you use [Docker](https://www.docker.com/)/[Kiri](https://runkiri.com/), make sure the emulator stack is running and port `9100` is exposed.
 
 ### Step 4 — Select the Job in Job History
 
@@ -118,7 +118,7 @@ You can also see:
 - Job count
 - Fault simulation toggles (for testing error scenarios)
 
-![Listeners page](../images/screenshots/guide-listeners.png)
+![Listeners page](../../images/screenshots/guide-listeners.png)
 
 ### Printer Profiles
 
@@ -128,7 +128,7 @@ The **Printer Profiles** page contains printer presets. These profiles help the 
 - **Custom profiles** can be created by admins/developers when needed.
 - Listeners can be mapped to a profile.
 
-![Printer profiles page](../images/screenshots/guide-printer-profiles.png)
+![Printer profiles page](../../images/screenshots/guide-printer-profiles.png)
 
 ---
 
