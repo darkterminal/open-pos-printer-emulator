@@ -116,6 +116,18 @@ node examples/escpos-printer-server/send-job.mjs
 3. A new job appears in `/jobs`.
 4. Inspect preview, warnings, command inspector, and raw data.
 
+## Verified E2E Evidence (Playwright MCP)
+
+Representative real-payload smoke tests were executed from **ESC/POS Printer Server** to OPPE using the sample receipt payload structure (including `transaction.paid_return`). This is a documentation sample, not a full 91-profile screenshot matrix; all 91 escpos-php profiles were previously smoke-tested over TCP ingest.
+
+| Profile | Listener | EPS Result | Screenshot |
+|---|---:|---|---|
+| Generic ESC/POS | 9100 | `[SUCCESS] Receipt printed successfully` | ![EPS jobs overview](../images/screenshots/e2e-eps-jobs-overview.png) |
+| Epson TM-T88V | 9101 | `[SUCCESS] Receipt printed successfully` | ![EPS TM-T88V](../images/screenshots/e2e-eps-tm-t88v.png) |
+| Zjiang ZJ-5890 | 9103 | `[SUCCESS] Receipt printed successfully` | ![EPS ZJ-5890](../images/screenshots/e2e-eps-zj5890.png) |
+
+Additional successful profiles in the same run: **Epson TM-U220 (9102)** and **Star TSP100III FuturePRNT (9104)**.
+
 ## Troubleshooting
 
 - **No job in emulator**: check `printer_host/printer_port`, listener status, and network reachability.
